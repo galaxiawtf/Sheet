@@ -4,6 +4,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import OnThisPageNav from "@/components/OnThisPageNav";
 import { getDifficultyRating } from "@/utils/difficulty";
+import LivePreview from "@/components/LivePreview";
 
 interface DocPageProps {
   content: {
@@ -1014,6 +1015,14 @@ export default function DocPage({ content }: DocPageProps) {
             label={`example.${content.lang === "js" ? "js" : content.lang === "css" ? "css" : "html"}`}
             copyable
           />
+        </Section>
+
+        {/* Live Preview */}
+        <Section delay={190}>
+          <h2 id="live-preview" className="text-2xl sm:text-3xl font-bold text-foreground">
+            Live Preview
+          </h2>
+          <LivePreview lang={content.lang} example={content.example} />
         </Section>
 
         {/* Real-world Use Case */}
