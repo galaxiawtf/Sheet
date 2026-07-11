@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { askGemini } from "./ai";
+import { askGemini, explainCodeStepByStep, evaluateUserCode } from "./ai";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -35,6 +35,34 @@ export const appRouter = router({
       }),
   }),
 
+  docs: router({
+    explain: publicProcedure
+      .input(z.object({ code: z.string(), context: z.string() }))
+      .mutation(async ({ input }) => {
+        try {
+          const explanation = await explainCodeStepByStep(input.code, input.context);
+          return { explanation };
+        } catch (error: any) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "An unexpected error occurred",
+          });
+        }
+      }),
+    evaluate: publicProcedure
+      .input(z.object({ userCode: z.string(), goal: z.string() }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await evaluateUserCode(input.userCode, input.goal);
+          return result;
+        } catch (error: any) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "An unexpected error occurred",
+          });
+        }
+      }),
+  }),
   // TODO: add feature routers here, e.g.
   // todo: router({
   //   list: protectedProcedure.query(({ ctx }) =>

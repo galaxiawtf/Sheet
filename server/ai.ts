@@ -52,3 +52,35 @@ export async function askGemini(prompt: string): Promise<string> {
     throw new Error(`AI Assistant Error: ${errorMessage}`);
   }
 }
+
+export async function explainCodeStepByStep(code: string, context: string): Promise<string> {
+  const prompt = `Please explain the following code step by step. Tell me how to build this from scratch and how each part works.\n\nContext: ${context}\n\nCode:\n${code}`;
+  return askGemini(prompt);
+}
+
+export async function evaluateUserCode(userCode: string, goal: string): Promise<{ isCorrect: boolean, feedback: string }> {
+  const prompt = `You are an AI teacher evaluating a student's code.\n\nThe goal of the exercise is: "${goal}"\n\nThe student's code is:\n${userCode}\n\nEvaluate if the student's code correctly achieves the goal. Respond with a JSON object containing exactly two keys: "isCorrect" (boolean) and "feedback" (a string with a short explanation or hint). Do not include markdown code blocks around the JSON.`;
+  try {
+    const client = getAi();
+    const response = await client.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: "You evaluate code and return JSON exactly.",
+        responseMimeType: "application/json"
+      },
+    });
+    const text = response.text || "{}";
+    const parsed = JSON.parse(text);
+    return {
+      isCorrect: !!parsed.isCorrect,
+      feedback: parsed.feedback || "Unable to evaluate."
+    };
+  } catch (err: any) {
+    console.error("Evaluation Error:", err);
+    return {
+      isCorrect: false,
+      feedback: "There was an error evaluating your code. Please try again."
+    };
+  }
+}

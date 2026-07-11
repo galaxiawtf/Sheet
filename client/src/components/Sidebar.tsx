@@ -159,8 +159,8 @@ export default function Sidebar({
                 <div key={cat} className="rounded-xl border border-border/50 bg-secondary/10 overflow-hidden">
                   <button
                     onClick={() => toggleCategory(cat)}
-                    className={`flex w-full items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:bg-secondary/40 ${
-                      isExpanded ? "bg-secondary/30 text-foreground" : "text-muted-foreground hover:text-foreground"
+                    className={`flex w-full items-center justify-between px-4 py-3 text-sm font-semibold transition-all duration-300 hover:bg-accent/10 hover:shadow-[0_0_15px_rgba(var(--accent),0.2)] ${
+                      isExpanded ? "bg-accent/5 text-foreground border-b border-accent/20" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">

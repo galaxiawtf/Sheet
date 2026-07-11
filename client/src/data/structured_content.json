@@ -36148,5 +36148,136 @@
     ],
     "guideNote": "Add `transition: background 0.3s, color 0.3s` to themed containers so switching feels smooth rather than jarring.",
     "id": "template_curated_ui_components_dark_mode_toggle_persisted"
+  },
+  {
+    "lang": "templates",
+    "cat": "Curated - Fancy Effects",
+    "shortcut": "Text Flowing Gradient",
+    "desc": "A continuous flowing gradient effect on text using background-clip.",
+    "level": "medium",
+    "example": "<h1 class=\"flowing-text\">Amazing Flowing Gradient</h1>\n\n<style>\n.flowing-text {\n  font-size: 3rem;\n  font-weight: bold;\n  background: linear-gradient(90deg, #ff8a00, #e52e71, #9c27b0, #ff8a00);\n  background-size: 300% 100%;\n  -webkit-background-clip: text;\n  -webkit-text-fill-color: transparent;\n  animation: flow 5s infinite linear;\n}\n\n@keyframes flow {\n  0% { background-position: 0% 50%; }\n  100% { background-position: 100% 50%; }\n}\n</style>",
+    "browserSupport": {
+      "chrome": true,
+      "firefox": true,
+      "safari": true,
+      "edge": true
+    },
+    "limitations": [
+      "Requires -webkit prefix for most browsers.",
+      "Doesn't work on older IE."
+    ],
+    "steps": [
+      {
+        "title": "1. Create the gradient",
+        "detail": "Use linear-gradient with multiple colors. The start and end colors should match for a seamless loop."
+      },
+      {
+        "title": "2. Clip the background",
+        "detail": "Use -webkit-background-clip: text and -webkit-text-fill-color: transparent to make the gradient only show where the text is."
+      },
+      {
+        "title": "3. Animate the background position",
+        "detail": "Set background-size to something large like 300%, and animate background-position from 0% to 100%."
+      }
+    ],
+    "guideNote": "This effect is best used on large, bold text.",
+    "id": "template_curated_fancy_effects_text_flowing_gradient"
+  },
+  {
+    "lang": "templates",
+    "cat": "Curated - Fancy Effects",
+    "shortcut": "Hover Moving Gradient",
+    "desc": "A gradient background that shifts smoothly when hovered.",
+    "level": "easy",
+    "example": "<div class=\"hover-card\">\n  Hover over me!\n</div>\n\n<style>\n.hover-card {\n  padding: 2rem;\n  border-radius: 12px;\n  color: white;\n  font-weight: bold;\n  text-align: center;\n  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #556270);\n  background-size: 200% 200%;\n  background-position: 0% 50%;\n  transition: background-position 0.5s ease-in-out;\n  cursor: pointer;\n}\n\n.hover-card:hover {\n  background-position: 100% 50%;\n}\n</style>",
+    "browserSupport": {
+      "chrome": true,
+      "firefox": true,
+      "safari": true,
+      "edge": true
+    },
+    "limitations": [],
+    "steps": [
+      {
+        "title": "1. Define the gradient",
+        "detail": "Set a linear gradient and make its size 200% so only part of it is visible at a time."
+      },
+      {
+        "title": "2. Add a transition",
+        "detail": "Apply a transition to background-position for a smooth sliding effect."
+      },
+      {
+        "title": "3. Change position on hover",
+        "detail": "In the :hover state, change the background-position to reveal the other side of the gradient."
+      }
+    ],
+    "guideNote": "Great for cards or large call-to-action buttons.",
+    "id": "template_curated_fancy_effects_hover_moving_gradient"
+  },
+  {
+    "lang": "templates",
+    "cat": "Curated - UI Components",
+    "shortcut": "Interactive Custom Button",
+    "desc": "A modern button with ripple effect and loading state functionality.",
+    "level": "hard",
+    "example": "<button class=\"btn\" onclick=\"handleClick(this)\"><span class=\"text\">Click Me</span></button>\n\n<style>\n.btn {\n  position: relative;\n  overflow: hidden;\n  padding: 10px 24px;\n  border: none;\n  border-radius: 8px;\n  background-color: #6366f1;\n  color: white;\n  font-weight: 600;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n.btn:active { transform: scale(0.95); }\n.btn.loading .text { opacity: 0; }\n.btn.loading::after {\n  content: '';\n  position: absolute;\n  top: 50%; left: 50%;\n  width: 20px; height: 20px;\n  margin: -10px 0 0 -10px;\n  border: 2px solid rgba(255,255,255,0.3);\n  border-top-color: white;\n  border-radius: 50%;\n  animation: spin 0.8s linear infinite;\n}\n@keyframes spin { to { transform: rotate(360deg); } }\n</style>\n\n<script>\nfunction handleClick(btn) {\n  btn.classList.add('loading');\n  btn.disabled = true;\n  setTimeout(() => {\n    btn.classList.remove('loading');\n    btn.disabled = false;\n  }, 2000);\n}\n</script>",
+    "browserSupport": {
+      "chrome": true,
+      "firefox": true,
+      "safari": true,
+      "edge": true
+    },
+    "limitations": [],
+    "steps": [
+      {
+        "title": "1. Styling the base",
+        "detail": "Create a clean button with rounded corners and a nice background color. Add overflow: hidden for internal effects."
+      },
+      {
+        "title": "2. Add the loading spinner CSS",
+        "detail": "Use the ::after pseudo-element to create a spinner that only shows when the .loading class is present."
+      },
+      {
+        "title": "3. Handle the click with JS",
+        "detail": "In JS, add the 'loading' class and disable the button to prevent multiple clicks, then simulate an async action with setTimeout."
+      }
+    ],
+    "guideNote": "This pattern is essential for form submissions.",
+    "id": "template_curated_ui_components_interactive_custom_button"
+  },
+  {
+    "lang": "templates",
+    "cat": "Curated - UI Components",
+    "shortcut": "Responsive Navbar",
+    "desc": "A clean, modern responsive navigation bar with a mobile hamburger menu.",
+    "level": "medium",
+    "example": "<nav class=\"navbar\">\n  <div class=\"logo\">Brand</div>\n  <ul class=\"nav-links\">\n    <li><a href=\"#\">Home</a></li>\n    <li><a href=\"#\">About</a></li>\n    <li><a href=\"#\">Contact</a></li>\n  </ul>\n  <button class=\"hamburger\" onclick=\"toggleMenu()\">☰</button>\n</nav>\n\n<style>\n.navbar { display: flex; justify-content: space-between; padding: 1rem 2rem; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); align-items: center; }\n.logo { font-size: 1.5rem; font-weight: bold; }\n.nav-links { list-style: none; display: flex; gap: 1.5rem; margin: 0; padding: 0; }\n.nav-links a { text-decoration: none; color: #333; font-weight: 500; }\n.hamburger { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; }\n\n@media (max-width: 768px) {\n  .hamburger { display: block; }\n  .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1rem; }\n  .nav-links.active { display: flex; }\n}\n</style>\n\n<script>\nfunction toggleMenu() {\n  document.querySelector('.nav-links').classList.toggle('active');\n}\n</script>",
+    "browserSupport": {
+      "chrome": true,
+      "firefox": true,
+      "safari": true,
+      "edge": true
+    },
+    "limitations": [],
+    "steps": [
+      {
+        "title": "1. Flexbox Layout",
+        "detail": "Use Flexbox on the navbar container to space out the logo and the links using justify-content: space-between."
+      },
+      {
+        "title": "2. Mobile Media Query",
+        "detail": "When the screen is smaller than 768px, hide the normal horizontal links and show the hamburger button."
+      },
+      {
+        "title": "3. The dropdown menu",
+        "detail": "Style the links as a vertical list positioned absolutely below the navbar when active."
+      },
+      {
+        "title": "4. Toggle script",
+        "detail": "A simple JS function adds or removes the 'active' class on the nav-links to show/hide them."
+      }
+    ],
+    "guideNote": "Ensure your container has position: relative if you want the menu to overlay content properly.",
+    "id": "template_curated_ui_components_responsive_navbar"
   }
 ]

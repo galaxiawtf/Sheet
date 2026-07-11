@@ -291,9 +291,7 @@ export default function Home() {
               onClick={() => setLocation("/")}
               className="flex flex-shrink-0 items-center gap-2"
             >
-              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground font-serif text-lg font-bold">
-                E
-              </span>
+              <img src="/anime-logo.jpg" alt="Logo" className="h-9 w-9 rounded-xl object-cover border border-accent/20 shadow-sm" />
               <h1 className="hidden text-base font-bold tracking-tight min-[400px]:block sm:text-xl">
                 Eli Shh Docs
               </h1>

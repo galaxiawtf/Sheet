@@ -1,5 +1,7 @@
-import { Copy, Check, Terminal, AlertTriangle, Info, HelpCircle, FileCode, CheckCircle2, ChevronRight, Chrome, Compass, Link2 } from "lucide-react";
+import { Copy, Sparkles, Check, Terminal, AlertTriangle, Info, HelpCircle, FileCode, CheckCircle2, ChevronRight, Chrome, Compass, Link2 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
+
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import OnThisPageNav from "@/components/OnThisPageNav";
@@ -515,6 +517,7 @@ export default function DocPage({ content }: DocPageProps) {
               </li>
             ))}
           </ol>
+          <AiExplanation shortcut={content.shortcut} code={content.example} context={content.desc} />
           {content.guideNote && (
             <div className="p-4 rounded-xl border border-accent/30 bg-accent/10 text-sm leading-relaxed text-foreground/80">
               <span className="font-semibold text-foreground">Note: </span>
@@ -581,6 +584,20 @@ export default function DocPage({ content }: DocPageProps) {
 
         <div className="divider-line" />
 
+        
+        {/* Try It Yourself Section */}
+        <Section delay={300}>
+          <h2 id="practice" className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+            Try It Yourself (AI Checked)
+          </h2>
+          <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Write code below to practice <strong>{content.shortcut}</strong>. Our AI will evaluate it!
+            </p>
+            <PracticeArea shortcut={content.shortcut} desc={content.desc} />
+          </div>
+        </Section>
+
         {/* Additional Info */}
         <div
           className="grid gap-6 pt-2 sm:grid-cols-2 animate-in fade-in slide-in-from-bottom-3 duration-500 fill-mode-both"
@@ -609,3 +626,76 @@ export default function DocPage({ content }: DocPageProps) {
   );
 }
 
+
+
+function PracticeArea({ shortcut, desc }: { shortcut: string, desc: string }) {
+  const [code, setCode] = useState("");
+  const evaluateMutation = trpc.docs.evaluate.useMutation();
+
+  const handleCheck = () => {
+    if (!code.trim()) return;
+    evaluateMutation.mutate({
+      userCode: code,
+      goal: `Use ${shortcut} to ${desc}`
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <textarea
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        className="w-full h-32 p-3 font-mono text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+        placeholder="Type your code here..."
+        spellCheck={false}
+      />
+      <div className="flex items-center gap-4">
+        <button
+          onClick={handleCheck}
+          disabled={evaluateMutation.isPending || !code.trim()}
+          className="px-4 py-2 bg-accent text-accent-foreground font-semibold rounded-md hover:opacity-90 disabled:opacity-50 transition-colors"
+        >
+          {evaluateMutation.isPending ? "Checking..." : "Check with AI"}
+        </button>
+      </div>
+      {evaluateMutation.data && (
+        <div className={`p-4 rounded-md border ${evaluateMutation.data.isCorrect ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-rose-500/50 bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+          <div className="flex items-center gap-2 font-bold mb-1">
+            {evaluateMutation.data.isCorrect ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
+            {evaluateMutation.data.isCorrect ? "Correct!" : "Needs Work"}
+          </div>
+          <p className="text-sm">{evaluateMutation.data.feedback}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function AiExplanation({ shortcut, code, context }: { shortcut: string, code: string, context: string }) {
+  const explainMutation = trpc.docs.explain.useMutation();
+
+  if (explainMutation.data) {
+    return (
+      <div className="mt-4 p-4 rounded-xl border border-accent/30 bg-accent/5">
+        <h3 className="font-bold mb-2 flex items-center gap-2 text-accent">
+          <Sparkles size={16} /> AI Explanation
+        </h3>
+        <div className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+          {explainMutation.data.explanation}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => explainMutation.mutate({ code, context: `Explain how ${shortcut} works.` })}
+      disabled={explainMutation.isPending}
+      className="mt-4 flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-accent-foreground bg-accent hover:bg-accent/90 rounded-md transition-colors disabled:opacity-50"
+    >
+      <Sparkles size={14} />
+      {explainMutation.isPending ? "Generating Explanation..." : "Ask AI for Detailed Explanation"}
+    </button>
+  );
+}

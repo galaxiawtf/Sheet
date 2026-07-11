@@ -250,6 +250,48 @@ async function askGemini(prompt) {
     throw new Error(`AI Assistant Error: ${errorMessage}`);
   }
 }
+async function explainCodeStepByStep(code, context) {
+  const prompt = `Please explain the following code step by step. Tell me how to build this from scratch and how each part works.
+
+Context: ${context}
+
+Code:
+${code}`;
+  return askGemini(prompt);
+}
+async function evaluateUserCode(userCode, goal) {
+  const prompt = `You are an AI teacher evaluating a student's code.
+
+The goal of the exercise is: "${goal}"
+
+The student's code is:
+${userCode}
+
+Evaluate if the student's code correctly achieves the goal. Respond with a JSON object containing exactly two keys: "isCorrect" (boolean) and "feedback" (a string with a short explanation or hint). Do not include markdown code blocks around the JSON.`;
+  try {
+    const client = getAi();
+    const response = await client.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: "You evaluate code and return JSON exactly.",
+        responseMimeType: "application/json"
+      }
+    });
+    const text2 = response.text || "{}";
+    const parsed = JSON.parse(text2);
+    return {
+      isCorrect: !!parsed.isCorrect,
+      feedback: parsed.feedback || "Unable to evaluate."
+    };
+  } catch (err) {
+    console.error("Evaluation Error:", err);
+    return {
+      isCorrect: false,
+      feedback: "There was an error evaluating your code. Please try again."
+    };
+  }
+}
 
 // server/routers.ts
 var appRouter = router({
@@ -270,6 +312,30 @@ var appRouter = router({
       try {
         const reply = await askGemini(input.prompt);
         return { reply };
+      } catch (error) {
+        throw new TRPCError3({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message || "An unexpected error occurred"
+        });
+      }
+    })
+  }),
+  docs: router({
+    explain: publicProcedure.input(z2.object({ code: z2.string(), context: z2.string() })).mutation(async ({ input }) => {
+      try {
+        const explanation = await explainCodeStepByStep(input.code, input.context);
+        return { explanation };
+      } catch (error) {
+        throw new TRPCError3({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message || "An unexpected error occurred"
+        });
+      }
+    }),
+    evaluate: publicProcedure.input(z2.object({ userCode: z2.string(), goal: z2.string() })).mutation(async ({ input }) => {
+      try {
+        const result = await evaluateUserCode(input.userCode, input.goal);
+        return result;
       } catch (error) {
         throw new TRPCError3({
           code: "INTERNAL_SERVER_ERROR",
