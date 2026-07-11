@@ -19,7 +19,55 @@ import { useTheme } from "@/contexts/ThemeContext";
 import DocsLayout from "@/components/DocsLayout";
 import Sidebar from "@/components/Sidebar";
 import DocPage from "@/components/DocPage";
-import structuredContent from "@/data/structured_content.json";
+import rawStructuredContent from "@/data/structured_content.json";
+
+const VOID_TAGS = new Set([
+  "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"
+]);
+
+// Preprocess and clean the structured content dynamically to format shortcuts,
+// map categories, and ensure missing standard elements like <head> are correctly displayed
+const structuredContent = (() => {
+  const processed = rawStructuredContent.map((item) => {
+    if (item.lang === "html" && item.cat === "Elements") {
+      let shortcut = item.shortcut;
+      
+      // Clean up backticked shortcuts
+      if (shortcut.startsWith("`") && shortcut.endsWith("`")) {
+        const tag = shortcut.slice(1, -1);
+        if (tag === "html:5") {
+          shortcut = "html:5";
+        } else if (tag === "script:src") {
+          shortcut = '<script src="...">';
+        } else {
+          shortcut = `<${tag}>`;
+        }
+      }
+      
+      // Extract the tag name to determine if it's void/self-closing (empty)
+      const cleanTag = shortcut.replace(/[<>`]/g, "").split(/[ +>:]/)[0];
+      const isSelfClosing = VOID_TAGS.has(cleanTag.toLowerCase());
+      
+      return {
+        ...item,
+        shortcut,
+        cat: isSelfClosing ? "Elements (Self-Closing / Empty)" : "Elements (Container)"
+      };
+    }
+    return item;
+  });
+
+  // Filter out duplicates that might occur after mapping backticks
+  const seenKeys = new Set<string>();
+  return processed.filter((item) => {
+    const key = `${item.lang}-${item.cat}-${item.shortcut}`;
+    if (seenKeys.has(key)) {
+      return false;
+    }
+    seenKeys.add(key);
+    return true;
+  });
+})();
 
 const LANG_META: Record<
   string,
@@ -82,6 +130,10 @@ export default function Home() {
     langContent.forEach((item) => {
       if (!groups[item.cat]) groups[item.cat] = [];
       groups[item.cat].push(item);
+    });
+    // Sort shortcuts alphabetically inside each category
+    Object.keys(groups).forEach((cat) => {
+      groups[cat].sort((a, b) => a.shortcut.localeCompare(b.shortcut, undefined, { sensitivity: "base" }));
     });
     return groups;
   }, [langContent]);
