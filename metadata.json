@@ -1,0 +1,6 @@
+{
+  "name": "Eli Shh Docs",
+  "description": "A sophisticated, multi-language web developer reference site for HTML, CSS, and JavaScript with a minimalist editorial aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
