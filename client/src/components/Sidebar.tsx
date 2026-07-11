@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { getDifficultyRating } from "@/utils/difficulty";
 
 interface SidebarProps {
-  currentLang: "html" | "css" | "js";
-  onLangChange: (lang: "html" | "css" | "js") => void;
+  currentLang: "html" | "css" | "js" | "templates";
+  onLangChange: (lang: "html" | "css" | "js" | "templates") => void;
   groupedContent: Record<string, any[]>;
   selectedItem: string | null;
   onSelectItem: (id: string) => void;

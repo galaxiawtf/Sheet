@@ -30,7 +30,7 @@ export async function askGemini(prompt: string): Promise<string> {
         systemInstruction: "You are an expert web development assistant. You provide correct code snippets and explanations for HTML, CSS, and JavaScript. Keep your answers concise, accurate, and provide code blocks when requested.",
       },
     });
-    return response.text;
+    return response.text || '';
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     let errorMessage = "An unexpected error occurred.";

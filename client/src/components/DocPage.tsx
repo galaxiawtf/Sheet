@@ -316,9 +316,9 @@ export default function DocPage({ content }: DocPageProps) {
             </span>
             {content.browserSupport && (
               <span className="ml-auto flex items-center gap-2">
-                {content.browserSupport.chrome && <Chrome size={16} className="text-muted-foreground hover:text-foreground" title="Chrome Supported" />}
+                {content.browserSupport.chrome && <span title="Chrome Supported"><Chrome size={16} className="text-muted-foreground hover:text-foreground" /></span>}
                 {content.browserSupport.firefox && <div className="text-muted-foreground hover:text-foreground font-bold text-xs w-4 text-center" title="Firefox Supported">fx</div>}
-                {content.browserSupport.safari && <Compass size={16} className="text-muted-foreground hover:text-foreground" title="Safari Supported" />}
+                {content.browserSupport.safari && <span title="Safari Supported"><Compass size={16} className="text-muted-foreground hover:text-foreground" /></span>}
                 {content.browserSupport.edge && <div className="text-muted-foreground hover:text-foreground font-bold text-xs w-4 text-center" title="Edge Supported">e</div>}
               </span>
             )}
