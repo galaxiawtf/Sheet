@@ -231,7 +231,7 @@ async function askGemini(prompt) {
         systemInstruction: "You are an expert web development assistant. You provide correct code snippets and explanations for HTML, CSS, and JavaScript. Keep your answers concise, accurate, and provide code blocks when requested."
       }
     });
-    return response.text;
+    return response.text || "";
   } catch (error) {
     console.error("Gemini API Error:", error);
     let errorMessage = "An unexpected error occurred.";
