@@ -5,20 +5,13 @@ import {
   Filter,
   Menu,
   X,
-  Moon,
-  Sun,
   Code2,
   Palette,
   Braces,
   ArrowRight,
-  Sparkles,
-  MousePointerClick,
-  SunMoon,
-  Copy,
-  History,
   User,
+  LayoutTemplate,
 } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
 import DocsLayout from "@/components/DocsLayout";
 import Sidebar from "@/components/Sidebar";
 import DocPage from "@/components/DocPage";
@@ -33,6 +26,7 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import rawStructuredContent from "@/data/structured_content.json";
+import templatesCatalog from "@/data/templates_catalog.json";
 import { getDifficultyRating, matchesDifficultyFilter, type DifficultyFilter } from "@/utils/difficulty";
 import { useReadProgress } from "@/hooks/useReadProgress";
 import { useDocScrollProgress } from "@/hooks/useDocScrollProgress";
@@ -76,14 +70,25 @@ const structuredContent = (() => {
 
   // Filter out duplicates that might occur after mapping backticks
   const seenKeys = new Set<string>();
-  return processed.filter((item) => {
+  const deduped = processed.filter((item) => {
     const key = `${item.lang}-${item.cat}-${item.shortcut}`;
-    if (seenKeys.has(key)) {
-      return false;
-    }
+    if (seenKeys.has(key)) return false;
     seenKeys.add(key);
     return true;
   });
+
+  const nonTemplates = deduped.filter((item) => item.lang !== "templates");
+  const curatedTemplates = deduped.filter(
+    (item) =>
+      item.lang === "templates" &&
+      ((item as { guide?: unknown[] }).guide?.length || item.id?.includes("curated"))
+  );
+  const curatedKeys = new Set(curatedTemplates.map((t) => `${t.cat}::${t.shortcut}`));
+  const catalogOnly = (templatesCatalog as typeof deduped).filter(
+    (t) => !curatedKeys.has(`${t.cat}::${t.shortcut}`)
+  );
+
+  return [...nonTemplates, ...curatedTemplates, ...catalogOnly];
 })();
 
 const SPECIAL_SHORTCUT_MAP: Record<string, string> = {
@@ -143,10 +148,10 @@ const LANG_META: Record<
   },
   templates: {
     label: "Templates",
-    icon: Palette,
-    blurb: "Ready-to-use production templates",
-    accent: "text-purple-500",
-    ring: "group-hover:border-purple-500/50",
+    icon: LayoutTemplate,
+    blurb: "5,000+ ready-to-use blocks",
+    accent: "text-zinc-300",
+    ring: "hover:border-zinc-600",
   },
 };
 
@@ -204,8 +209,6 @@ export default function Home() {
       setCurrentLang("html");
     }
   }, [location]);
-
-  const { theme, toggleTheme } = useTheme();
 
   const langContent = useMemo(
     () => structuredContent.filter((item) => item.lang === currentLang),
@@ -295,89 +298,55 @@ export default function Home() {
         />
       }
       header={
-        <header className="z-40 flex-shrink-0 border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4">
+        <header className="z-40 flex-shrink-0 border-b border-border/40 bg-background">
+          <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden flex-shrink-0 rounded-lg p-2 text-foreground transition-colors hover:bg-accent/10 active:scale-95"
+              className="md:hidden flex-shrink-0 rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
               aria-label="Toggle navigation"
             >
-              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
 
-            <button
-              onClick={() => setLocation("/")}
-              className="flex flex-shrink-0 items-center gap-2"
-            >
-              <img src="/anime-logo.jpg" alt="Logo" className="h-9 w-9 rounded-xl object-cover border border-accent/20 shadow-sm" />
-              <h1 className="hidden text-base font-bold tracking-tight min-[400px]:block sm:text-xl">
+            <button onClick={() => setLocation("/")} className="flex items-center gap-2.5">
+              <img src="/anime-logo.jpg" alt="Logo" className="h-8 w-8 rounded-lg object-cover opacity-90" />
+              <span className="hidden text-sm font-medium tracking-tight text-foreground min-[400px]:block">
                 Eli Shh Docs
-              </h1>
+              </span>
             </button>
 
-            <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
-              <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  size={18}
-                />
+            <div className="flex flex-1 items-center justify-end gap-2">
+              <div className="relative min-w-0 flex-1 sm:max-w-xs">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                 <input
                   type="text"
-                  placeholder="Search..."
+                  placeholder="Search…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-lg border border-input bg-input/80 py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-md border border-border/60 bg-input/50 py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
                 />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center justify-center flex-shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground active:scale-95" aria-label="Filter Search" title="Filter Search">
-                    <Filter size={18} />
+                  <button className="rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-white/[0.04]" aria-label="Filter search">
+                    <Filter size={16} />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Filter Results</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-44 border-border/60 bg-popover">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Scope</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuCheckboxItem 
-                    checked={searchFilters.html} 
-                    onCheckedChange={(checked) => setSearchFilters(prev => ({...prev, html: checked}))}
-                  >
-                    HTML
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem 
-                    checked={searchFilters.css} 
-                    onCheckedChange={(checked) => setSearchFilters(prev => ({...prev, css: checked}))}
-                  >
-                    CSS
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem 
-                    checked={searchFilters.js} 
-                    onCheckedChange={(checked) => setSearchFilters(prev => ({...prev, js: checked}))}
-                  >
-                    JavaScript
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem 
-                    checked={searchFilters.templates} 
-                    onCheckedChange={(checked) => setSearchFilters(prev => ({...prev, templates: checked}))}
-                  >
-                    Templates
-                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem checked={searchFilters.html} onCheckedChange={(c) => setSearchFilters((p) => ({ ...p, html: c }))}>HTML</DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem checked={searchFilters.css} onCheckedChange={(c) => setSearchFilters((p) => ({ ...p, css: c }))}>CSS</DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem checked={searchFilters.js} onCheckedChange={(c) => setSearchFilters((p) => ({ ...p, js: c }))}>JavaScript</DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem checked={searchFilters.templates} onCheckedChange={(c) => setSearchFilters((p) => ({ ...p, templates: c }))}>Templates</DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <button
                 onClick={() => setShowDisclaimer(true)}
-                className="flex-shrink-0 rounded-lg p-2 text-foreground transition-colors hover:bg-accent/10 active:scale-95"
-                title="Creator Disclaimer & Socials"
-                aria-label="Creator Disclaimer & Socials"
+                className="rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                aria-label="About"
               >
-                <User size={20} />
-              </button>
-              <button
-                onClick={toggleTheme}
-                className="flex-shrink-0 rounded-lg p-2 text-foreground transition-colors hover:bg-accent/10 active:scale-95"
-                aria-label="Toggle theme"
-              >
-                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+                <User size={16} />
               </button>
             </div>
           </div>
@@ -454,214 +423,49 @@ export default function Home() {
           }}
         />
       ) : (
-        <div className="space-y-14">
-          {/* Hero */}
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary/60 via-background to-background p-6 sm:p-10 animate-in fade-in slide-in-from-bottom-3 duration-500">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-accent/10 blur-3xl" />
-            <div className="relative max-w-3xl">
-              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
-                <Sparkles size={13} className="text-accent" />
-                {structuredContent.length} / {structuredContent.length} documented
-              </span>
-              <h2 className="mb-4 bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-4xl font-bold text-transparent sm:text-6xl text-balance">
-                Welcome to Eli Shh Docs
-              </h2>
-              <p className="text-lg text-muted-foreground sm:text-xl">
-                A comprehensive, fast reference for HTML, CSS, and JavaScript —
-                complete with Emmet shortcuts and per-editor tips. Explore the
-                sidebar or search to get started.
-              </p>
-            </div>
-          </div>
+        <div className="mx-auto max-w-3xl space-y-16 py-4">
+          <section className="space-y-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+              Reference
+            </p>
+            <h2 className="text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
+              Eli Shh Docs
+            </h2>
+            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+              Minimal docs for HTML, CSS, JavaScript, and {structuredContent.filter((i) => i.lang === "templates").length.toLocaleString()}+ templates.
+              Search or pick a section from the sidebar.
+            </p>
+          </section>
 
-          {/* Language cards */}
-          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {(["html", "css", "js", "templates"] as const).map((lang, i) => {
+          <section className="grid gap-px overflow-hidden rounded-lg border border-border/50 bg-border/30 sm:grid-cols-2">
+            {(["html", "css", "js", "templates"] as const).map((lang) => {
               const meta = LANG_META[lang];
               const Icon = meta.icon;
-              const count = structuredContent.filter(
-                (item: any) => item.lang === lang
-              ).length;
+              const count = structuredContent.filter((item) => item.lang === lang).length;
               return (
                 <button
                   key={lang}
                   onClick={() => setLocation(`/${lang}`)}
-                  className={`group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${meta.ring} animate-in fade-in slide-in-from-bottom-4 fill-mode-both`}
-                  style={{ animationDelay: `${100 + i * 90}ms` }}
+                  className="group flex items-center justify-between bg-background px-5 py-4 text-left transition-colors hover:bg-white/[0.02]"
                 >
-                  <div className="mb-4 flex items-center justify-between">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary transition-transform duration-300 group-hover:scale-110">
-                      <Icon size={24} className={meta.accent} />
-                    </span>
-                    <ArrowRight
-                      size={20}
-                      className="text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-foreground"
-                    />
+                  <div className="flex items-center gap-3">
+                    <Icon size={18} className="text-muted-foreground group-hover:text-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{meta.label}</p>
+                      <p className="text-xs text-muted-foreground">{count.toLocaleString()} entries</p>
+                    </div>
                   </div>
-                  <h3 className="mb-1 text-2xl font-bold">{meta.label}</h3>
-                  <p className="mb-3 text-sm text-muted-foreground">{meta.blurb}</p>
-                  <span className="text-sm font-semibold text-foreground">
-                    {count} references
-                  </span>
+                  <ArrowRight size={14} className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 </button>
               );
             })}
-          </div>
+          </section>
 
-          {/* Bento-style Grid: Quick Tips & Changelogs */}
-          <div className="grid gap-8 lg:grid-cols-12">
-            {/* Quick Tips Column (5/12 cols) */}
-            <div className="space-y-5 lg:col-span-5">
-              <h3 className="text-2xl font-bold flex items-center gap-2">
-                <Sparkles size={20} className="text-accent" />
-                <span>Quick Tips</span>
-              </h3>
-              <div className="grid gap-4">
-                {[
-                  {
-                    icon: Search,
-                    text: "Use the search bar to find any HTML element, CSS property, or JS method across all languages instantly.",
-                  },
-                  {
-                    icon: MousePointerClick,
-                    text: "Click any item in the sidebar to open detailed docs with syntax, examples, and editor shortcuts.",
-                  },
-                  {
-                    icon: SunMoon,
-                    text: "Toggle light/dark mode from the top-right — your preference is saved automatically.",
-                  },
-                  {
-                    icon: Copy,
-                    text: "Every code example has a one-click copy button so you can grab snippets fast.",
-                  },
-                ].map((tip, i) => {
-                  const Icon = tip.icon;
-                  return (
-                    <div
-                      key={i}
-                      className="flex gap-3 rounded-xl border border-border bg-card p-4 transition-all duration-300 hover:border-accent/40 hover:shadow-sm animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
-                      style={{ animationDelay: `${150 + i * 70}ms` }}
-                    >
-                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                        <Icon size={18} />
-                      </span>
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {tip.text}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Changelog Column (7/12 cols) */}
-            <div className="space-y-5 lg:col-span-7">
-              <h3 className="text-2xl font-bold flex items-center gap-2">
-                <History size={20} className="text-accent" />
-                <span>What's New & Changelogs</span>
-              </h3>
-              
-              <div className="rounded-2xl border border-border bg-card/50 p-5 space-y-6 overflow-hidden">
-                {/* Timeline entries */}
-                <div className="relative border-l border-border pl-5 ml-2.5 space-y-6">
-                  {/* Item 0: Latest */}
-                  <div className="relative">
-                    <span className="absolute -left-[27px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent ring-4 ring-background">
-                      <span className="h-1.5 w-1.5 rounded-full bg-accent-foreground" />
-                    </span>
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">v1.3.0 (Latest Update)</span>
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-wider">New Features</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">Released on July 11, 2026</p>
-                      <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside mt-2 pl-1 leading-relaxed">
-                        <li>
-                          <strong className="text-foreground">UI Refinements:</strong> Completely reworked the sidebar to be cleaner and more organized, featuring collapsible folder structures, visual difficulty indicators, and automatic category expansion. The initial disclaimer popup has also been optimized to be scrollable and perfectly responsive on mobile devices.
-                        </li>
-                        <li>
-                          <strong className="text-foreground">AI Chatbot:</strong> Introduced a Universal Developer Q&A AI Assistant. Ask any web development question directly in the app and get accurate code snippets and explanations instantly (with full mobile support).
-                        </li>
-                        <li>
-                          <strong className="text-foreground">Interactive UX:</strong> Added interactive DOM nesting trees, click-to-copy buttons on titles, related link tags, and browser compatibility badges. Replaced static texts with interactive tools.
-                        </li>
-                        <li>
-                          <strong className="text-foreground">Editable Live Preview:</strong> Every example now has a real mini code editor next to a live, sandboxed output pane -- edit the code and watch CSS animations play or JS run instantly. Theme-aware, so the preview stays dark in dark mode.
-                        </li>
-                        <li>
-                          <strong className="text-foreground">Library Expansion:</strong> Added vendor-prefixed CSS properties, modern selectors (<code className="font-mono text-[11px] text-accent font-semibold px-1 py-0.5 bg-accent/5 rounded">:is()</code>, <code className="font-mono text-[11px] text-accent font-semibold px-1 py-0.5 bg-accent/5 rounded">:has()</code>), container/supports queries, generators, private class fields, and dozens more JS/HTML/CSS entries.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Item 1 */}
-                  <div className="relative">
-                    {/* Circle node on the line */}
-                    <span className="absolute -left-[27px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-muted border border-border ring-4 ring-background">
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                    </span>
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">v1.2.0</span>
-                        <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-wider">New Features</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">Released on July 11, 2026</p>
-                      <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside mt-2 pl-1 leading-relaxed">
-                        <li>
-                          <strong className="text-foreground">Difficulty Sorting:</strong> Sort elements in the sidebar from <span className="font-semibold text-emerald-500">Easiest to Hardest</span> or <span className="font-semibold text-rose-500">Hardest to Easiest</span>, simplifying structured learning pathways.
-                        </li>
-                        <li>
-                          <strong className="text-foreground">Difficulty Tags:</strong> Dynamic levels (Easy, Medium, Hard) mapped to all HTML tags, CSS rules, and JS concepts.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Item 2 */}
-                  <div className="relative">
-                    <span className="absolute -left-[27px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-muted border border-border ring-4 ring-background">
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                    </span>
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">v1.1.0</span>
-                        <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-wider">Enhancement</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">Released on July 11, 2026</p>
-                      <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside mt-2 pl-1 leading-relaxed">
-                        <li>
-                          <strong className="text-foreground">Placement Guidelines:</strong> Highly precise contextual rules detailing where tags, properties, or scripts belong in files.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Item 3 */}
-                  <div className="relative">
-                    <span className="absolute -left-[27px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-muted border border-border ring-4 ring-background">
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                    </span>
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">v1.0.0</span>
-                        <span className="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 text-[10px] font-bold uppercase tracking-wider">Initial Release</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">Released on July 11, 2026</p>
-                      <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside mt-2 pl-1 leading-relaxed">
-                        <li>
-                          <strong className="text-foreground">Interactive Cheat Sheets:</strong> Fast, searchable cheat sheets for HTML, CSS, and JS.
-                        </li>
-                        <li>
-                          <strong className="text-foreground">Instant Search:</strong> Full-text indexing across tags, titles, methods, and examples.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <section className="space-y-3 border-t border-border/40 pt-10">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Live preview on every doc · Read progress in sidebar · Filter by difficulty
+            </p>
+          </section>
         </div>
       )}
     </DocsLayout>
