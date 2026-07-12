@@ -119,27 +119,27 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`sidebar-dark fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col border-r border-white/[0.06] bg-[#0a0a0c] text-zinc-100 transition-transform duration-300 ease-out md:relative md:z-0 md:w-72 md:max-w-none md:flex-shrink-0 md:translate-x-0 ${
+        className={`sidebar-dark fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 ease-out md:relative md:z-0 md:w-72 md:max-w-none md:flex-shrink-0 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex-1 overflow-y-auto sidebar-scroll py-5 px-3">
           <div className="mb-4 px-1">
-            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500 mb-2">
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-2">
               Language
             </p>
             <Select value={currentLang} onValueChange={(v) => onLangChange(v as typeof currentLang)}>
-              <SelectTrigger className="w-full h-9 border-white/[0.08] bg-white/[0.04] text-zinc-100 hover:bg-white/[0.07]">
+              <SelectTrigger className="w-full h-9 border-sidebar-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                 <SelectValue>
                   <span className="flex items-center gap-2 text-sm">
-                    <LangIcon size={14} className="text-zinc-400" />
+                    <LangIcon size={14} className="text-muted-foreground" />
                     {currentLangMeta?.label}
                   </span>
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="border-white/10 bg-[#141416] text-zinc-100">
+              <SelectContent className="border-sidebar-border bg-popover text-popover-foreground">
                 {LANG_OPTIONS.map(({ value, label, icon: Icon }) => (
-                  <SelectItem key={value} value={value} className="cursor-pointer focus:bg-white/[0.06]">
+                  <SelectItem key={value} value={value} className="cursor-pointer focus:bg-sidebar-accent focus:text-sidebar-accent-foreground">
                     <span className="flex items-center gap-2">
                       <Icon size={14} />
                       {label}
@@ -151,17 +151,17 @@ export default function Sidebar({
           </div>
 
           <div className="mb-4 px-1">
-            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500 mb-2 flex items-center gap-1.5">
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-2 flex items-center gap-1.5">
               <Filter size={11} />
               Filter
             </p>
             <Select value={filterBy} onValueChange={(v) => onFilterChange(v as DifficultyFilter)}>
-              <SelectTrigger className="w-full h-9 border-white/[0.08] bg-white/[0.04] text-zinc-100 hover:bg-white/[0.07]">
+              <SelectTrigger className="w-full h-9 border-sidebar-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-white/10 bg-[#141416] text-zinc-100">
+              <SelectContent className="border-sidebar-border bg-popover text-popover-foreground">
                 {FILTER_OPTIONS.map(({ value, label }) => (
-                  <SelectItem key={value} value={value} className="cursor-pointer focus:bg-white/[0.06]">
+                  <SelectItem key={value} value={value} className="cursor-pointer focus:bg-sidebar-accent focus:text-sidebar-accent-foreground">
                     {label}
                   </SelectItem>
                 ))}
@@ -169,10 +169,10 @@ export default function Sidebar({
             </Select>
           </div>
 
-          <div className="mb-5 mx-1 flex items-center justify-between gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+          <div className="mb-5 mx-1 flex items-center justify-between gap-3 rounded-lg border border-sidebar-border bg-sidebar-accent/50 px-3 py-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Eye size={14} className="text-zinc-500 flex-shrink-0" />
-              <Label htmlFor="highlight-difficulty" className="cursor-pointer text-xs text-zinc-400">
+              <Eye size={14} className="text-muted-foreground flex-shrink-0" />
+              <Label htmlFor="highlight-difficulty" className="cursor-pointer text-xs text-muted-foreground">
                 Highlight difficulty
               </Label>
             </div>
@@ -183,7 +183,7 @@ export default function Sidebar({
             />
           </div>
 
-          <p className="mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500">
+          <p className="mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             {currentLangMeta?.label}
           </p>
 
@@ -192,22 +192,22 @@ export default function Sidebar({
               if (items.length === 0) return null;
               const isExpanded = expandedCategories.has(cat);
               return (
-                <div key={cat} className="rounded-lg border border-white/[0.05] overflow-hidden">
+                <div key={cat} className="rounded-lg border border-sidebar-border overflow-hidden">
                   <button
                     type="button"
                     onClick={() => toggleCategory(cat)}
-                    className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition-colors duration-200 hover:bg-white/[0.04] ${
-                      isExpanded ? "bg-white/[0.03] text-zinc-100" : "text-zinc-500"
+                    className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                      isExpanded ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-muted-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {isExpanded ? (
-                        <FolderOpen size={14} className="text-zinc-400 flex-shrink-0" />
+                        <FolderOpen size={14} className="text-muted-foreground flex-shrink-0" />
                       ) : (
                         <Folder size={14} className="flex-shrink-0" />
                       )}
                       <span className="truncate text-xs font-medium">{cat}</span>
-                      <span className="text-[10px] text-zinc-600 tabular-nums">{items.length}</span>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">{items.length}</span>
                     </div>
                     <ChevronDown
                       size={14}
@@ -215,7 +215,7 @@ export default function Sidebar({
                     />
                   </button>
                   {isExpanded && (
-                    <div className="border-t border-white/[0.04] px-1 py-1">
+                    <div className="border-t border-sidebar-border px-1 py-1">
                       {items.map((item) => {
                         const itemId = `${item.lang}-${item.cat}-${item.shortcut}`;
                         const isActive = selectedItem === itemId;
@@ -224,10 +224,10 @@ export default function Sidebar({
                         const isRead = readPercent >= 100;
 
                         const nameClass = isActive
-                          ? "text-zinc-950 font-medium"
+                          ? "text-sidebar-accent-foreground font-medium"
                           : showColoredNames
                             ? getDifficultyTextColor(rating.label)
-                            : "text-zinc-400 group-hover:text-zinc-200";
+                            : "text-muted-foreground group-hover:text-foreground";
 
                         return (
                           <button
@@ -235,7 +235,7 @@ export default function Sidebar({
                             type="button"
                             onClick={() => onSelectItem(itemId)}
                             className={`group flex w-full flex-col gap-1 rounded-md px-2.5 py-2 text-left transition-colors duration-150 ${
-                              isActive ? "bg-zinc-100" : "hover:bg-white/[0.04]"
+                              isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2">
@@ -255,10 +255,10 @@ export default function Sidebar({
                                 />
                               )}
                             </div>
-                            <div className="h-px w-full overflow-hidden rounded-full bg-white/[0.08]">
+                            <div className="h-px w-full overflow-hidden rounded-full bg-border">
                               <div
                                 className={`h-full rounded-full transition-all duration-500 ${
-                                  isRead ? "bg-emerald-500" : "bg-zinc-500"
+                                  isRead ? "bg-emerald-500" : "bg-muted-foreground"
                                 }`}
                                 style={{ width: `${readPercent}%` }}
                               />

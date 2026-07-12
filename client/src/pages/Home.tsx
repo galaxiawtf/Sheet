@@ -456,8 +456,8 @@ export default function Home() {
             </p>
           </section>
 
-          <section className="grid gap-px overflow-hidden rounded-lg border border-border/50 bg-border/30 sm:grid-cols-2">
-            {(["html", "css", "js", "templates"] as const).map((lang) => {
+          <section className="grid gap-4 sm:grid-cols-2">
+            {(["html", "css", "js", "templates"] as const).map((lang, index) => {
               const meta = LANG_META[lang];
               const Icon = meta.icon;
               const count = structuredContent.filter((item) => item.lang === lang).length;
@@ -465,25 +465,62 @@ export default function Home() {
                 <button
                   key={lang}
                   onClick={() => setLocation(`/${lang}`)}
-                  className="group flex items-center justify-between bg-background px-5 py-4 text-left transition-colors hover:bg-white/[0.02]"
+                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-6 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-accent/50"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon size={18} className="text-muted-foreground group-hover:text-foreground" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{meta.label}</p>
-                      <p className="text-xs text-muted-foreground">{count.toLocaleString()} entries</p>
+                  <div className="flex items-start justify-between mb-8">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-secondary-foreground transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground">
+                      <Icon size={24} />
                     </div>
+                    <ArrowRight size={20} className="text-muted-foreground opacity-0 transition-all duration-300 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 group-hover:text-primary" />
                   </div>
-                  <ArrowRight size={14} className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  <div>
+                    <p className="text-xl font-bold tracking-tight text-foreground mb-1">{meta.label}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{count.toLocaleString()} entries</p>
+                  </div>
                 </button>
               );
             })}
           </section>
 
-          <section className="space-y-3 border-t border-border/40 pt-10">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Live preview on every doc · Read progress in sidebar · Filter by difficulty
-            </p>
+          <section className="space-y-6 pt-10">
+            <h3 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-xs font-semibold">!</span>
+              Changelog
+            </h3>
+            <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+              
+              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-primary text-primary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="h-2 w-2 rounded-full bg-background" />
+                </div>
+                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-5 rounded-2xl border border-border bg-card shadow-sm transition-all hover:shadow-md">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-bold text-foreground">Complete Design Overhaul</h4>
+                    <span className="text-xs font-medium text-muted-foreground">Today</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Introduced a minimal, high-quality aesthetic with Inter typography, fluid dark/light modes, premium components, and refined gradients.
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-secondary text-secondary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+                </div>
+                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-5 rounded-2xl border border-border bg-card shadow-sm transition-all hover:shadow-md">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-bold text-foreground">Expanded Templates</h4>
+                    <span className="text-xs font-medium text-muted-foreground">v1.2</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Added over 2,000 new UI templates to the templates section. Live previews are now faster and more reliable!
+                  </p>
+                </div>
+              </div>
+
+            </div>
           </section>
         </div>
       )}

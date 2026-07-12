@@ -33,54 +33,56 @@ export default function DisclaimerModal({ isOpen, onClose }: DisclaimerModalProp
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             aria-label="Close"
           />
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.2 }}
-            className="relative w-full max-w-md rounded-lg border border-border/60 bg-[#111113] text-zinc-100 shadow-xl"
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl"
           >
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+            
             <button
               type="button"
               onClick={onClose}
-              className="absolute right-3 top-3 rounded p-1 text-zinc-500 hover:text-zinc-200"
+              className="absolute right-4 top-4 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
             >
               <X size={16} />
             </button>
 
-            <div className="p-6 sm:p-7">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500 mb-2">
+            <div className="p-6 sm:p-8 relative">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">
                 About
               </p>
-              <h3 className="text-lg font-medium tracking-tight mb-3">Eli Shh Docs</h3>
-              <p className="text-sm leading-relaxed text-zinc-400 mb-6">
+              <h3 className="text-2xl font-semibold tracking-tight mb-3">Eli Shh Docs</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground mb-8">
                 Built by Eli (Jm). A minimal reference for web development — docs, live previews, and 5,000+ templates.
               </p>
 
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500 mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
                 Connect
               </p>
-              <ul className="space-y-2 mb-7">
+              <ul className="space-y-2 mb-8">
                 {SOCIALS.map((s, i) => (
-                  <li key={s.name} className="flex items-center justify-between gap-3 rounded-md border border-white/[0.06] px-3 py-2">
+                  <li key={s.name} className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary/30 px-4 py-3 transition-colors hover:bg-secondary/60 hover:border-accent/40">
                     <a
                       href={s.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="min-w-0 flex-1 text-sm hover:underline"
+                      className="min-w-0 flex-1 text-sm font-medium"
                     >
-                      <span className="text-zinc-500 text-xs mr-2">{s.name}</span>
+                      <span className="text-muted-foreground text-xs font-normal w-20 inline-block">{s.name}</span>
                       {s.handle}
                     </a>
                     <button
                       type="button"
                       onClick={() => handleCopy(s.handle, i)}
-                      className="text-zinc-500 hover:text-zinc-200 p-1"
+                      className="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-background transition-colors"
                     >
-                      {copied === i ? <Check size={14} /> : <Copy size={14} />}
+                      {copied === i ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                     </button>
                   </li>
                 ))}
@@ -89,7 +91,7 @@ export default function DisclaimerModal({ isOpen, onClose }: DisclaimerModalProp
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full rounded-md bg-zinc-100 py-2.5 text-sm font-medium text-zinc-950 hover:bg-white transition-colors"
+                className="w-full rounded-xl bg-foreground py-3 text-sm font-semibold text-background hover:opacity-90 transition-opacity active:scale-[0.98]"
               >
                 Continue
               </button>
