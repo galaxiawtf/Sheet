@@ -309,13 +309,13 @@ export default function DocPage({ content }: DocPageProps) {
         {/* Header */}
         <Section>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="inline-block px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold uppercase tracking-wide">
+            <span className="inline-block px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold uppercase tracking-wide transition-transform hover:scale-105">
               {content.lang}
             </span>
-            <span className="inline-block px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold">
+            <span className="inline-block px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold transition-transform hover:scale-105">
               {content.cat}
             </span>
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${rating.color}`}>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-transform hover:scale-105 ${rating.color}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${
                 rating.label === "Easy"
                   ? "bg-emerald-500"
@@ -335,7 +335,7 @@ export default function DocPage({ content }: DocPageProps) {
             )}
           </div>
           <div className="flex items-end justify-between">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight break-words">
+            <h1 className="gradient-text text-3xl sm:text-4xl font-bold tracking-tight break-words">
               {content.shortcut}
             </h1>
             <button 
@@ -360,7 +360,7 @@ export default function DocPage({ content }: DocPageProps) {
             Where to put it
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="p-4 rounded-xl border border-border bg-secondary/20 flex flex-col justify-between">
+            <div className="hover-lift p-4 rounded-xl border border-border bg-secondary/20 flex flex-col justify-between">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Target Document File</span>
                 <p className="font-semibold text-sm flex items-center gap-1.5 text-foreground">
@@ -369,7 +369,7 @@ export default function DocPage({ content }: DocPageProps) {
                 </p>
               </div>
             </div>
-            <div className="p-4 rounded-xl border border-border bg-secondary/20 flex flex-col justify-between">
+            <div className="hover-lift p-4 rounded-xl border border-border bg-secondary/20 flex flex-col justify-between">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recommended Scope / Target</span>
                 <p className="font-semibold text-sm flex items-center gap-1.5 text-foreground">

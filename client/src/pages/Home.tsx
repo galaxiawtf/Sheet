@@ -182,7 +182,7 @@ export default function Home() {
   const [highlightDifficulty, setHighlightDifficulty] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [routeLoading, setRouteLoading] = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const { getProgress, setProgress } = useReadProgress();
 
   const { theme, toggleTheme } = useTheme();

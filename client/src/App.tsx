@@ -4,7 +4,9 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 import { Chatbot } from "./components/Chatbot";
 
 function Router() {
@@ -21,6 +23,21 @@ function Router() {
   );
 }
 
+/**
+ * Gate the docs behind the client-side login. Until the user signs in
+ * (Eli / Eli), only the Login page is rendered — no docs, no chatbot.
+ */
+function GatedApp() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Login />;
+  return (
+    <>
+      <Router />
+      <Chatbot />
+    </>
+  );
+}
+
 // NOTE: About Theme
 // - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
 //   to keep consistent foreground/background color across components
@@ -30,11 +47,12 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system" switchable={true}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          <Chatbot />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <GatedApp />
+          </TooltipProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

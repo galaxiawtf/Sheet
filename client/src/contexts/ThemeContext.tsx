@@ -2,6 +2,9 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
+/** What the app can be initialised with — "system" resolves to the OS preference. */
+type ThemePreference = Theme | "system";
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme?: () => void;
@@ -12,8 +15,19 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: React.ReactNode;
-  defaultTheme?: Theme;
+  defaultTheme?: ThemePreference;
   switchable?: boolean;
+}
+
+/** Resolve a possibly-"system" preference into a concrete light/dark theme. */
+function resolvePreference(pref: ThemePreference): Theme {
+  if (pref === "system") {
+    if (typeof window !== "undefined" && window.matchMedia) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "light";
+  }
+  return pref;
 }
 
 export function ThemeProvider({
@@ -24,9 +38,10 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(() => {
     if (switchable) {
       const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
+      if (stored === "light" || stored === "dark") return stored;
+      return resolvePreference(defaultTheme);
     }
-    return defaultTheme;
+    return resolvePreference(defaultTheme);
   });
 
   useEffect(() => {
