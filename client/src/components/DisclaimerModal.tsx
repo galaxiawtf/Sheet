@@ -128,19 +128,14 @@ export default function DisclaimerModal({ isOpen, onClose, ctaLabel = "Continue 
             transition={{ type: "spring", stiffness: 380, damping: 28 }}
             className="relative w-full max-w-md overflow-hidden rounded-3xl border border-border/60 bg-card text-card-foreground shadow-[0_24px_80px_-12px_rgba(0,0,0,0.35)]"
           >
-            {/* Header band with avatar */}
-            <div className="relative h-24 overflow-hidden bg-gradient-to-br from-primary/15 via-accent/40 to-primary/10">
-              <div
-                className="pointer-events-none absolute inset-0 opacity-50 dark:opacity-30"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 25% 30%, color-mix(in oklch, var(--primary) 22%, transparent) 0, transparent 38%), radial-gradient(circle at 78% 60%, color-mix(in oklch, var(--primary) 14%, transparent) 0, transparent 45%)",
-                }}
-              />
+            {/* Banner image as header band */}
+            <div className="relative h-28 overflow-hidden">
+              <img src="/banner.gif" alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-card" />
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute right-3 top-3 z-10 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="absolute right-3 top-3 z-10 rounded-full p-1.5 text-white/80 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Close"
               >
                 <X size={16} />
@@ -151,7 +146,7 @@ export default function DisclaimerModal({ isOpen, onClose, ctaLabel = "Continue 
             <div className="px-6 sm:px-7 pb-5 -mt-10 relative">
               <div className="mb-4 flex items-end justify-between">
                 <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-secondary shadow-sm">
-                  <img src="/logo.jpg" alt="Eli Shh Docs" className="h-full w-full object-cover" />
+                  <img src="/profile.jpg" alt="Eli" className="h-full w-full object-cover" />
                 </div>
                 <span className="rounded-full border border-border/60 bg-secondary/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                   v2.0

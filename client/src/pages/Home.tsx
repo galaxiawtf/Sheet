@@ -469,24 +469,18 @@ export default function Home() {
         <div className="mx-auto max-w-4xl space-y-10 py-6">
           {/* ───────────────── Hero ───────────────── */}
           <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-card">
-            {/* Gradient header band — echoes the popup */}
-            <div className="relative h-28 sm:h-32 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-accent/40 to-primary/10" />
-              <div
-                className="pointer-events-none absolute inset-0 opacity-50 dark:opacity-30"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 20% 40%, color-mix(in oklch, var(--primary) 20%, transparent) 0, transparent 40%), radial-gradient(circle at 80% 55%, color-mix(in oklch, var(--primary) 12%, transparent) 0, transparent 45%)",
-                }}
-              />
+            {/* Banner image as header band */}
+            <div className="relative h-28 sm:h-36 overflow-hidden">
+              <img src="/banner.gif" alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-card" />
               <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent" />
             </div>
 
-            <div className="relative px-7 pb-7 -mt-8 sm:px-9 sm:pb-8">
+            <div className="relative px-7 pb-7 -mt-10 sm:px-9 sm:pb-8">
               {/* Avatar + title row */}
               <div className="mb-5 flex items-end gap-4">
-                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl border-4 border-card bg-secondary text-2xl font-bold text-foreground shadow-md">
-                  E
+                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-secondary shadow-md">
+                  <img src="/profile.jpg" alt="Eli" className="h-full w-full object-cover" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-0.5">
@@ -506,7 +500,7 @@ export default function Home() {
                 ready-to-use templates. Search anything, or pick a track below.
               </p>
 
-              {/* Stat row — styled like the popup's social links */}
+              {/* Stat row */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
                   { label: "Languages", value: "3", icon: BookOpen, color: "#e34f26" },
@@ -522,10 +516,10 @@ export default function Home() {
                       style={{ borderLeftColor: s.color, borderLeftWidth: "3px" }}
                     >
                       <span
-                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
                         style={{ color: s.color, backgroundColor: `color-mix(in srgb, ${s.color} 12%, transparent)` }}
                       >
-                        <Icon size={14} />
+                        <Icon size={16} strokeWidth={2} />
                       </span>
                       <div className="leading-tight">
                         <div className="text-sm font-semibold text-foreground">{s.value}</div>
@@ -567,13 +561,13 @@ export default function Home() {
                       style={{ backgroundColor: meta.solid }}
                     />
                     <div
-                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-base font-bold transition-all duration-200 group-hover:scale-110"
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-all duration-200 group-hover:scale-110"
                       style={{
                         color: meta.solid,
                         backgroundColor: `color-mix(in srgb, ${meta.solid} 14%, transparent)`,
                       }}
                     >
-                      <Icon size={20} />
+                      <Icon size={22} strokeWidth={2} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline gap-2">
@@ -612,13 +606,13 @@ export default function Home() {
                   badge: "Latest",
                   when: "Today",
                   latest: true,
-                  title: "AI Chatbot — Code Editor & File Upload",
-                  body: "AI replies now render in a styled code editor with syntax highlighting and a one-click Copy button. You can also attach images and files directly in the chat — the AI can read and analyse them.",
+                  title: "Redesigned Popup, Home & Login",
+                  body: "The About popup now features your actual banner GIF and profile photo. Home hero and login card use the same banner + profile treatment. Language cards use accent bars matching the popup's social links. Header search is now centered.",
                 },
                 {
                   when: "Today",
-                  title: "Profile Popup — Brand Colors & Social Links",
-                  body: "The About popup now links your real Telegram (@kishshiii) and Facebook (itsurboyelifr) profiles, each styled with their official brand color and a left accent bar.",
+                  title: "AI Chatbot — Code Editor & File Upload",
+                  body: "AI replies now render in a styled code editor with syntax highlighting and a one-click Copy button. You can also attach images and files directly in the chat — the AI can read and analyse them.",
                 },
                 {
                   when: "Earlier today",
@@ -626,7 +620,7 @@ export default function Home() {
                   body: "Language cards redesigned with hover lift, icon badges, and smooth animations. Added a working theme toggle in the header so you can switch between dark and light mode.",
                 },
                 {
-                  when: "v1.2",
+                  when: "v2.0",
                   title: "5,000+ Templates Added",
                   body: "Expanded the Templates section with thousands of ready-to-use UI blocks. Each entry includes a live preview, difficulty rating, and read-progress tracking in the sidebar.",
                 },

@@ -82,16 +82,10 @@ export default function Login() {
         transition={{ type: "spring", stiffness: 260, damping: 22 }}
         className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-border/60 bg-card shadow-[0_24px_80px_-12px_rgba(0,0,0,0.35)] backdrop-blur-xl"
       >
-        {/* Gradient header band — matches the About popup */}
+        {/* Banner image as header band */}
         <div className="relative h-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-accent/40 to-primary/10" />
-          <div
-            className="pointer-events-none absolute inset-0 opacity-50 dark:opacity-30"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 25% 30%, color-mix(in oklch, var(--primary) 22%, transparent) 0, transparent 38%), radial-gradient(circle at 78% 60%, color-mix(in oklch, var(--primary) 14%, transparent) 0, transparent 45%)",
-            }}
-          />
+          <img src="/banner.gif" alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-card" />
           <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-card to-transparent" />
         </div>
 
@@ -102,9 +96,9 @@ export default function Login() {
               initial={{ scale: 0.6, rotate: -8, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.05 }}
-              className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-card bg-secondary text-2xl font-bold text-foreground shadow-md"
+              className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-secondary shadow-md"
             >
-              E
+              <img src="/profile.jpg" alt="Eli" className="h-full w-full object-cover" />
             </motion.div>
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary mb-0.5">
               Welcome back
