@@ -8,10 +8,10 @@ interface DisclaimerModalProps {
 }
 
 const SOCIALS = [
-  { name: "Instagram", handle: "@Elihateslies", link: "https://instagram.com/Elihateslies" },
-  { name: "Telegram", handle: "@kishshiii", link: "https://t.me/kishshiii" },
-  { name: "X", handle: "@Demorgavon", link: "https://x.com/Demorgavon" },
-  { name: "Discord", handle: "@Shinzuke", link: "https://discord.com" },
+  { name: "Instagram", handle: "@Elihateslies", link: "https://instagram.com/Elihateslies", color: "#E1306C" },
+  { name: "Telegram", handle: "@kishshiii", link: "https://t.me/kishshiii", color: "#24A1DE" },
+  { name: "X", handle: "@Demorgavon", link: "https://x.com/Demorgavon", color: "currentColor" },
+  { name: "Facebook", handle: "itsurboyelifr", link: "https://www.facebook.com/itsurboyelifr", color: "#1877F2" },
 ];
 
 export default function DisclaimerModal({ isOpen, onClose }: DisclaimerModalProps) {
@@ -67,14 +67,15 @@ export default function DisclaimerModal({ isOpen, onClose }: DisclaimerModalProp
               </p>
               <ul className="space-y-2 mb-8">
                 {SOCIALS.map((s, i) => (
-                  <li key={s.name} className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary/30 px-4 py-3 transition-colors hover:bg-secondary/60 hover:border-accent/40">
+                  <li key={s.name} className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary/30 px-4 py-3 transition-colors hover:bg-secondary/60" style={{ borderLeftColor: s.color !== "currentColor" ? s.color : undefined, borderLeftWidth: s.color !== "currentColor" ? '4px' : '1px' }}>
                     <a
                       href={s.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="min-w-0 flex-1 text-sm font-medium"
+                      className="min-w-0 flex-1 text-sm font-medium transition-colors"
+                      style={{ color: s.color !== "currentColor" ? s.color : undefined }}
                     >
-                      <span className="text-muted-foreground text-xs font-normal w-20 inline-block">{s.name}</span>
+                      <span className="text-muted-foreground text-xs font-normal w-20 inline-block group-hover:text-foreground transition-colors">{s.name}</span>
                       {s.handle}
                     </a>
                     <button
