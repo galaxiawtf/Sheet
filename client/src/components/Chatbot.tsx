@@ -1,9 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
-  MessageCircle, X, Send, Loader2, Bot, User,
-  Copy, Check, Paperclip, Image as ImageIcon, FileText, XCircle,
+  MessageCircle, X, Send, Copy, Check, Paperclip, FileText, XCircle, User,
 } from "lucide-react";
-import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
@@ -13,7 +11,7 @@ type Attachment = {
   name: string;
   base64: string;
   mimeType: string;
-  preview?: string; // for images
+  preview?: string;
 };
 
 type Message = {
@@ -23,7 +21,6 @@ type Message = {
   attachment?: Attachment;
 };
 
-// Code block with copy button
 function CodeBlock({ language, code }: { language: string; code: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -34,45 +31,57 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   };
 
   return (
-    <div className="my-2 overflow-hidden rounded-lg border border-border bg-[#1a1b26]">
-      {/* Editor header */}
-      <div className="flex items-center justify-between border-b border-border/50 bg-[#16161e] px-3 py-1.5">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+    <div className="my-2 w-full max-w-full min-w-0 overflow-hidden rounded-lg border border-white/10 bg-[#1a1b26]">
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-[#16161e] px-3 py-1.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex flex-shrink-0 gap-1">
+            <span className="h-2 w-2 rounded-full bg-[#ff5f57]" />
+            <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
+            <span className="h-2 w-2 rounded-full bg-[#28c840]" />
           </div>
-          <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+          <span className="truncate text-[10px] font-medium uppercase tracking-wider text-zinc-500">
             {language || "code"}
           </span>
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-zinc-400 hover:bg-white/5 hover:text-zinc-200 transition-colors"
+          className="flex flex-shrink-0 items-center gap-1 rounded px-2 py-0.5 text-[11px] text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200"
         >
           {copied ? (
-            <><Check size={12} className="text-emerald-400" /><span className="text-emerald-400">Copied!</span></>
+            <><Check size={11} className="text-emerald-400" /><span className="text-emerald-400">Copied!</span></>
           ) : (
-            <><Copy size={12} /><span>Copy</span></>
+            <><Copy size={11} /><span>Copy</span></>
           )}
         </button>
       </div>
-      <SyntaxHighlighter
-        language={language || "text"}
-        style={oneDark as any}
-        PreTag="div"
-        customStyle={{
-          margin: 0,
-          padding: "12px 16px",
-          background: "transparent",
-          fontSize: "12px",
-          lineHeight: "1.6",
-        }}
-        codeTagProps={{ style: { fontFamily: "'JetBrains Mono', 'Fira Code', monospace" } }}
-      >
-        {code}
-      </SyntaxHighlighter>
+      {/* Bulletproof horizontal-scroll containment:
+          - min-w-0 lets this wrapper shrink below the code's intrinsic width
+          - overflow-x-auto keeps the scrollbar ON the code block, never on the chatbox
+          - min-width:100% on the pre makes short snippets fill the block and lets long
+            snippets expand, so the inner scrollbar only appears when truly needed. */}
+      <div className="relative w-full min-w-0 overflow-x-auto overflow-y-hidden">
+        <SyntaxHighlighter
+          language={language || "text"}
+          style={oneDark as any}
+          PreTag="div"
+          customStyle={{
+            margin: 0,
+            padding: "12px 16px",
+            background: "transparent",
+            fontSize: "11.5px",
+            lineHeight: "1.65",
+            minWidth: "100%",
+          }}
+          codeTagProps={{
+            style: {
+              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+              whiteSpace: "pre",
+            },
+          }}
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
     </div>
   );
 }
@@ -85,7 +94,7 @@ export function Chatbot() {
     {
       id: "welcome",
       role: "bot",
-      content: "Hi! I'm your coding assistant. Ask me anything about HTML, CSS, or JavaScript — you can also send images or files!",
+      content: "Hey! I'm ELI — ask me anything about HTML, CSS, or JavaScript. You can also send images or files!",
     },
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,70 +109,55 @@ export function Chatbot() {
       ]);
     },
     onError: (error) => {
-      let errorMsg = error.message;
-      if (
-        errorMsg.includes("Unexpected end of JSON input") ||
-        errorMsg.includes("Unexpected token") ||
-        errorMsg.includes("execute 'json' on 'Response'")
-      ) {
-        errorMsg =
-          "API configuration error. Please ensure the `GEMINI_API_KEY` is set in your Vercel environment variables.";
+      let msg = error.message;
+      if (msg.includes("Unexpected end of JSON") || msg.includes("Unexpected token")) {
+        msg = "API config error. Make sure `GEMINI_API_KEY` is set in Vercel environment variables.";
       }
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), role: "bot", content: `**Error:** ${errorMsg}` },
+        { id: Date.now().toString(), role: "bot", content: `**Error:** ${msg}` },
       ]);
     },
   });
 
   const handleSend = () => {
     if ((!input.trim() && !attachment) || chatMutation.isPending) return;
-
-    const userMsg = input.trim() || (attachment ? `[Attached: ${attachment.name}]` : "");
+    const userMsg = input.trim() || `[Attached: ${attachment?.name}]`;
     setInput("");
-
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     setMessages((prev) => [
       ...prev,
-      {
-        id: Date.now().toString(),
-        role: "user",
-        content: userMsg,
-        attachment: attachment ?? undefined,
-      },
+      { id: Date.now().toString(), role: "user", content: userMsg, attachment: attachment ?? undefined },
     ]);
-
     chatMutation.mutate({
-      prompt: userMsg || "Please analyze or describe this file.",
+      prompt: userMsg || "Please analyse this file.",
       base64Image: attachment?.base64,
       mimeType: attachment?.mimeType,
     });
-
     setAttachment(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
       const base64 = dataUrl.split(",")[1];
-      const isImage = file.type.startsWith("image/");
       setAttachment({
         name: file.name,
         base64,
         mimeType: file.type,
-        preview: isImage ? dataUrl : undefined,
+        preview: file.type.startsWith("image/") ? dataUrl : undefined,
       });
     };
     reader.readAsDataURL(file);
-    // reset so same file can be picked again
     e.target.value = "";
   };
 
-  // Auto-grow textarea
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     e.target.style.height = "auto";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
@@ -188,85 +182,94 @@ export function Chatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-xl transition-all hover:scale-110 hover:shadow-2xl active:scale-95"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full shadow-xl transition-all hover:scale-110 hover:shadow-2xl active:scale-95 border-2 border-border"
           aria-label="Open chat"
         >
-          <MessageCircle size={24} />
+          <img src="/logo.jpg" alt="ELI" className="h-full w-full object-cover" />
         </button>
       )}
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[420px] sm:h-[600px] sm:max-h-[88vh] bg-background sm:rounded-2xl sm:border border-border shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex flex-col overflow-hidden sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[600px] sm:max-h-[88vh] sm:w-[420px] sm:rounded-2xl sm:border border-border bg-background shadow-2xl">
+
           {/* Header */}
-          <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3 bg-card">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
-                <Bot size={16} />
+          <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-card px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-border">
+                <img src="/logo.jpg" alt="ELI" className="h-full w-full object-cover" />
               </div>
-              <div>
-                <p className="text-sm font-semibold leading-none">Dev Assistant</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {chatMutation.isPending ? "Thinking…" : "Online"}
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-none">ELI</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  {chatMutation.isPending ? "Typing…" : "Online"}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <X size={18} />
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-5" ref={scrollRef}>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-              >
-                {/* Avatar */}
-                <div
-                  className={`flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${
-                    msg.role === "user"
-                      ? "bg-foreground text-background"
-                      : "bg-secondary text-secondary-foreground"
-                  }`}
-                >
-                  {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
-                </div>
+          {/* Messages — key fix: overflow-hidden on outer, overflow-y-auto on inner */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4" ref={scrollRef}>
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    {msg.role === "bot" ? (
+                      <div className="h-7 w-7 overflow-hidden rounded-full border border-border">
+                        <img src="/logo.jpg" alt="ELI" className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-background">
+                        <User size={13} />
+                      </div>
+                    )}
+                  </div>
 
-                {/* Bubble */}
-                <div className={`max-w-[80%] space-y-2 ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
-                  {/* Attachment preview */}
-                  {msg.attachment?.preview && (
-                    <img
-                      src={msg.attachment.preview}
-                      alt={msg.attachment.name}
-                      className="max-w-[200px] rounded-xl border border-border object-cover shadow-sm"
-                    />
-                  )}
-                  {msg.attachment && !msg.attachment.preview && (
-                    <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-                      <FileText size={14} />
-                      <span className="max-w-[140px] truncate">{msg.attachment.name}</span>
-                    </div>
-                  )}
-
-                  {/* Text bubble */}
-                  {msg.content && (
-                    <div
-                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                        msg.role === "user"
-                          ? "bg-foreground text-background rounded-tr-sm"
-                          : "bg-secondary/50 text-foreground rounded-tl-sm"
-                      }`}
-                    >
-                      {msg.role === "user" ? (
-                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  {/* Content — min-w-0 + overflow-hidden prevents blowout. max-w-full lives in
+                      the bot branch only so it can't fight the user branch's max-w-[80%]. */}
+                  <div
+                    className={
+                      msg.role === "user"
+                        ? "min-w-0 flex flex-col items-end gap-1.5 max-w-[80%]"
+                        : "min-w-0 flex max-w-full flex-1 flex-col gap-1.5 overflow-hidden"
+                    }
+                  >
+                    {/* Image attachment preview */}
+                    {msg.attachment?.preview && (
+                      <img
+                        src={msg.attachment.preview}
+                        alt={msg.attachment.name}
+                        className="max-w-[180px] rounded-xl border border-border object-cover"
+                      />
+                    )}
+                    {/* File attachment (non-image) */}
+                    {msg.attachment && !msg.attachment.preview && (
+                      <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                        <FileText size={13} />
+                        <span className="max-w-[140px] truncate">{msg.attachment.name}</span>
+                      </div>
+                    )}
+                    {/* Text / markdown */}
+                    {msg.content && (
+                      msg.role === "user" ? (
+                        <div className="rounded-2xl rounded-tr-sm bg-foreground px-4 py-2.5 text-sm text-background">
+                          <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                        </div>
                       ) : (
-                        <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                        // Bot: no bubble wrapper — just prose + code blocks inline, full width.
+                        // overflow-wrap-anywhere makes very long tokens/URLs wrap instead of
+                        // forcing a horizontal scrollbar on the chatbox.
+                        <div
+                          className="w-full min-w-0 max-w-full overflow-hidden text-sm prose prose-sm dark:prose-invert max-w-none"
+                          style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+                        >
                           <Markdown
                             components={{
                               code({ node, inline, className, children, ...props }: any) {
@@ -277,17 +280,23 @@ export function Chatbot() {
                                 ) : (
                                   <code
                                     {...props}
-                                    className="rounded bg-muted px-1.5 py-0.5 font-mono text-[12px]"
+                                    className="rounded bg-secondary px-1 py-0.5 font-mono text-[12px] break-words"
                                   >
                                     {children}
                                   </code>
                                 );
                               },
-                              // also handle fenced blocks without language
+                              // Pass `<pre>` children through untouched — CodeBlock already
+                              // constrains overflow on its own, and adding another wrapper
+                              // here would double the `my-2` margin around code blocks.
                               pre({ children }: any) {
                                 return <>{children}</>;
                               },
-                              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                              p: ({ children }) => (
+                                <p className="mb-2 break-words last:mb-0">
+                                  {children}
+                                </p>
+                              ),
                               ul: ({ children }) => <ul className="mb-2 list-disc pl-4 space-y-0.5">{children}</ul>,
                               ol: ({ children }) => <ol className="mb-2 list-decimal pl-4 space-y-0.5">{children}</ol>,
                               li: ({ children }) => <li className="text-sm">{children}</li>,
@@ -296,60 +305,59 @@ export function Chatbot() {
                             {msg.content}
                           </Markdown>
                         </div>
-                      )}
-                    </div>
-                  )}
+                      )
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {/* Typing indicator */}
-            {chatMutation.isPending && (
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 h-7 w-7 rounded-full bg-secondary flex items-center justify-center">
-                  <Bot size={14} />
+              {/* Typing indicator */}
+              {chatMutation.isPending && (
+                <div className="flex gap-2.5">
+                  <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-border">
+                    <img src="/logo.jpg" alt="ELI" className="h-full w-full object-cover" />
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm bg-secondary/50 px-4 py-3">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" />
+                  </div>
                 </div>
-                <div className="rounded-2xl rounded-tl-sm bg-secondary/50 px-4 py-3 flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" />
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Attachment preview strip */}
+          {/* Attachment strip */}
           {attachment && (
-            <div className="flex-shrink-0 flex items-center gap-2 border-t border-border bg-secondary/20 px-4 py-2">
+            <div className="flex flex-shrink-0 items-center gap-2 border-t border-border bg-secondary/20 px-4 py-2">
               {attachment.preview ? (
-                <img src={attachment.preview} alt="" className="h-10 w-10 rounded-md object-cover border border-border" />
+                <img src={attachment.preview} alt="" className="h-10 w-10 rounded-md border border-border object-cover" />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-secondary border border-border">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary">
                   <FileText size={16} className="text-muted-foreground" />
                 </div>
               )}
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-medium">{attachment.name}</p>
                 <p className="text-[10px] text-muted-foreground">{attachment.mimeType}</p>
               </div>
               <button
                 onClick={() => setAttachment(null)}
-                className="rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
               >
                 <XCircle size={16} />
               </button>
             </div>
           )}
 
-          {/* Input area */}
+          {/* Input */}
           <div className="flex-shrink-0 border-t border-border bg-card p-3">
             <div className="flex items-end gap-2 rounded-xl border border-border bg-background px-3 py-2 focus-within:border-foreground/30 transition-colors">
-              {/* File / Image buttons */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-shrink-0 mb-0.5 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Attach file or image"
+                className="mb-0.5 flex-shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Attach file"
               >
                 <Paperclip size={18} />
               </button>
@@ -360,26 +368,22 @@ export function Chatbot() {
                 className="hidden"
                 onChange={handleFileChange}
               />
-
-              {/* Textarea */}
               <textarea
                 ref={textareaRef}
                 value={input}
-                onChange={handleInput}
+                onChange={handleTextareaInput}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask me anything… (Shift+Enter for newline)"
+                placeholder="Ask me anything…"
                 rows={1}
-                className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[24px] max-h-[120px] leading-relaxed"
+                className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed min-h-[24px] max-h-[120px]"
               />
-
-              {/* Send button */}
               <button
                 type="button"
                 onClick={handleSend}
                 disabled={(!input.trim() && !attachment) || chatMutation.isPending}
-                className="flex-shrink-0 mb-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background transition-all hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30 active:scale-95"
               >
-                <Send size={15} />
+                <Send size={14} />
               </button>
             </div>
             <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
