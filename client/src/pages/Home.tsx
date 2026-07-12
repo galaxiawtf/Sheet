@@ -314,7 +314,7 @@ export default function Home() {
 
             <button onClick={() => setLocation("/")} className="flex items-center gap-2.5 group">
               <img
-                src="/anime-logo.jpg"
+                src="/logo.jpg"
                 alt="Eli Shh Docs"
                 className="h-8 w-8 rounded-lg object-cover transition-transform group-hover:scale-105"
               />
