@@ -10,6 +10,7 @@ import {
   Braces,
   ArrowRight,
   ArrowUpRight,
+  ChevronRight,
   User,
   LayoutTemplate,
   Sparkles,
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import DocsLayout from "@/components/DocsLayout";
 import Sidebar from "@/components/Sidebar";
-import DocPage from "@/components/DocPage";
+import DocPage, { type DocEntry } from "@/components/DocPage";
 import TemplatesDashboard from "@/components/TemplatesDashboard";
 import DisclaimerModal from "@/components/DisclaimerModal";
 import {
@@ -214,6 +215,9 @@ export default function Home() {
       } else {
         setSelectedItem(null);
       }
+    } else if (pathParts.length === 2) {
+      setCurrentLang(pathParts[0] as "html" | "css" | "js" | "templates");
+      setSelectedItem(null);
     } else if (pathParts.length === 1) {
       setCurrentLang(pathParts[0] as "html" | "css" | "js" | "templates");
       setSelectedItem(null);
@@ -268,6 +272,58 @@ export default function Home() {
       (item: any) => `${item.lang}-${item.cat}-${item.shortcut}` === selectedItem
     );
   }, [selectedItem]);
+
+  const orderedLessons = useMemo(
+    () => [...langContent].sort((a, b) =>
+      a.cat.localeCompare(b.cat, undefined, { sensitivity: "base" }) ||
+      a.shortcut.localeCompare(b.shortcut, undefined, { sensitivity: "base" })
+    ),
+    [langContent]
+  );
+
+  const lessonIndex = selectedContent
+    ? orderedLessons.findIndex((item) => item.id === selectedContent.id)
+    : -1;
+  const previousLesson = lessonIndex > 0 ? orderedLessons[lessonIndex - 1] : undefined;
+  const nextLesson = lessonIndex >= 0 && lessonIndex < orderedLessons.length - 1
+    ? orderedLessons[lessonIndex + 1]
+    : undefined;
+
+  const relatedLessons = useMemo(() => {
+    if (!selectedContent) return [];
+    const explicit = (selectedContent.relatedIds || [])
+      .map((id: string) => structuredContent.find((item) => item.id === id || item.shortcut === id))
+      .filter(Boolean);
+    const categoryPeers = orderedLessons.filter(
+      (item) => item.cat === selectedContent.cat && item.id !== selectedContent.id
+    );
+    const seen = new Set<string>();
+    return [...explicit, ...categoryPeers].filter((item: any) => {
+      const key = item.id || `${item.lang}-${item.cat}-${item.shortcut}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 4);
+  }, [selectedContent, orderedLessons]);
+
+  const quizOptions = useMemo(() => {
+    if (!selectedContent) return [];
+    return orderedLessons
+      .filter((item) => item.id !== selectedContent.id && item.desc !== selectedContent.desc)
+      .map((item) => item.desc)
+      .filter((desc, index, all) => all.indexOf(desc) === index)
+      .slice(0, 3);
+  }, [selectedContent, orderedLessons]);
+
+  const routeParts = location.split("/").filter(Boolean);
+  const activeCategorySlug = routeParts.length === 2 ? routeParts[1] : null;
+  const activeCategoryLessons = activeCategorySlug
+    ? orderedLessons.filter((item) => getCategorySlug(item.cat) === activeCategorySlug)
+    : [];
+
+  const navigateToLesson = (item: DocEntry) => {
+    setLocation(`/${item.lang}/${getCategorySlug(item.cat)}/${getShortcutSlug(item.shortcut)}`);
+  };
 
   useDocScrollProgress(selectedItem, setProgress);
 
@@ -455,7 +511,46 @@ export default function Home() {
           </div>
         )
       ) : selectedContent ? (
-        <DocPage content={selectedContent} />
+        <DocPage
+          content={selectedContent as DocEntry}
+          previous={previousLesson as DocEntry | undefined}
+          next={nextLesson as DocEntry | undefined}
+          relatedEntries={relatedLessons as DocEntry[]}
+          quizOptions={quizOptions}
+          onNavigate={navigateToLesson}
+          onNavigateHome={() => setLocation("/")}
+          onNavigateLanguage={() => setLocation(`/${selectedContent.lang}`)}
+          onNavigateCategory={() => setLocation(`/${selectedContent.lang}/${getCategorySlug(selectedContent.cat)}`)}
+        />
+      ) : activeCategoryLessons.length > 0 ? (
+        <div className="mx-auto max-w-5xl space-y-6 py-4">
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Breadcrumb">
+            <button onClick={() => setLocation("/")} className="hover:text-foreground">Home</button>
+            <ChevronRight size={14} />
+            <button onClick={() => setLocation(`/${currentLang}`)} className="uppercase hover:text-foreground">{currentLang}</button>
+            <ChevronRight size={14} />
+            <span className="font-medium text-foreground">{activeCategoryLessons[0].cat}</span>
+          </nav>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-accent">Reference index</p>
+            <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{activeCategoryLessons[0].cat}</h1>
+            <p className="mt-2 text-muted-foreground">Study {activeCategoryLessons.length} lessons in order, then test each topic with examples and quizzes.</p>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-border">
+            {activeCategoryLessons.map((item, index) => (
+              <button
+                key={`${item.lang}-${item.cat}-${item.shortcut}`}
+                onClick={() => navigateToLesson(item as DocEntry)}
+                className="grid w-full gap-2 border-b border-border p-4 text-left transition-colors last:border-b-0 hover:bg-secondary/50 sm:grid-cols-[3rem_1fr_2fr_auto] sm:items-center"
+              >
+                <span className="text-xs font-semibold text-muted-foreground">{String(index + 1).padStart(2, "0")}</span>
+                <code className="font-semibold text-foreground">{item.shortcut}</code>
+                <span className="text-sm text-muted-foreground">{item.desc}</span>
+                <ChevronRight size={16} className="hidden text-muted-foreground sm:block" />
+              </button>
+            ))}
+          </div>
+        </div>
       ) : currentLang === "templates" ? (
         <TemplatesDashboard
           templates={langContent}
@@ -583,6 +678,35 @@ export default function Home() {
                   </button>
                 );
               })}
+            </div>
+          </section>
+
+          {/* ───────────────── Guided topic indexes ───────────────── */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                {currentLang.toUpperCase()} learning path
+              </p>
+              <div className="h-px flex-1 bg-border/60" />
+              <span className="text-xs text-muted-foreground">{langContent.length} lessons</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(groupedContent).map(([category, items]) => (
+                <button
+                  key={category}
+                  onClick={() => setLocation(`/${currentLang}/${getCategorySlug(category)}`)}
+                  className="group rounded-xl border border-border/60 bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-semibold text-foreground">{category}</h3>
+                    <ChevronRight size={16} className="text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-accent" />
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{items.length} step-by-step lessons</p>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
+                    <div className="h-full w-1/3 rounded-full bg-accent/70" />
+                  </div>
+                </button>
+              ))}
             </div>
           </section>
 

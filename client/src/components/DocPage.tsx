@@ -1,4 +1,4 @@
-import { Copy, Sparkles, Check, Terminal, AlertTriangle, Info, HelpCircle, FileCode, CheckCircle2, ChevronRight, Chrome, Compass, Link2 } from "lucide-react";
+import { Copy, Sparkles, Check, Terminal, AlertTriangle, Info, HelpCircle, FileCode, CheckCircle2, ChevronRight, ChevronLeft, Chrome, Compass, BookOpenCheck } from "lucide-react";
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { motion } from "framer-motion";
@@ -15,37 +15,47 @@ import { javascript } from "@codemirror/lang-javascript";
 import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
 import { useTheme } from "@/contexts/ThemeContext";
 
-interface DocPageProps {
-  content: {
-    id?: string;
-    lang: string;
-    cat: string;
-    category?: string;
-    shortcut: string;
-    desc: string;
-    example: string;
-    syntax?: string;
-    whatItDoes?: string;
-    useCase?: string;
-    relatedIds?: string[];
-    validParents?: string[];
-    validChildren?: string[];
-    browserSupport?: {
-      chrome?: boolean;
-      firefox?: boolean;
-      safari?: boolean;
-      edge?: boolean;
-    };
-    shortcuts?: {
-      vscode: string;
-      notepadpp: string;
-    };
-    guide?: {
-      title: string;
-      detail: string;
-    }[];
-    guideNote?: string;
+export interface DocEntry {
+  id?: string;
+  lang: string;
+  cat: string;
+  category?: string;
+  shortcut: string;
+  desc: string;
+  example: string;
+  syntax?: string;
+  whatItDoes?: string;
+  useCase?: string;
+  relatedIds?: string[];
+  validParents?: string[];
+  validChildren?: string[];
+  browserSupport?: {
+    chrome?: boolean;
+    firefox?: boolean;
+    safari?: boolean;
+    edge?: boolean;
   };
+  shortcuts?: {
+    vscode: string;
+    notepadpp: string;
+  };
+  guide?: {
+    title: string;
+    detail: string;
+  }[];
+  guideNote?: string;
+}
+
+interface DocPageProps {
+  content: DocEntry;
+  previous?: DocEntry;
+  next?: DocEntry;
+  relatedEntries?: DocEntry[];
+  quizOptions?: string[];
+  onNavigate?: (entry: DocEntry) => void;
+  onNavigateHome?: () => void;
+  onNavigateLanguage?: () => void;
+  onNavigateCategory?: () => void;
 }
 
 const CODE_BG = "#282c34";
@@ -289,7 +299,60 @@ function getDynamicDetails(lang: string, cat: string, shortcut: string, desc: st
   return { whereToPut: { fileType, location, detail }, guide, limitations };
 }
 
-export default function DocPage({ content }: DocPageProps) {
+function QuickQuiz({ shortcut, correctAnswer, options }: { shortcut: string; correctAnswer: string; options: string[] }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const uniqueAnswers = Array.from(new Set([correctAnswer, ...options])).slice(0, 4);
+  const offset = uniqueAnswers.length > 0 ? shortcut.length % uniqueAnswers.length : 0;
+  const answers = [...uniqueAnswers.slice(offset), ...uniqueAnswers.slice(0, offset)];
+
+  return (
+    <div className="rounded-xl border border-border bg-secondary/20 p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <BookOpenCheck size={20} className="text-accent" />
+        <h3 className="font-semibold">Quick knowledge check</h3>
+      </div>
+      <p className="text-sm text-muted-foreground">Which description best explains <strong className="text-foreground">{shortcut}</strong>?</p>
+      <div className="grid gap-2">
+        {answers.map((answer) => {
+          const isCorrect = answer === correctAnswer;
+          const isSelected = selected === answer;
+          return (
+            <button
+              key={answer}
+              onClick={() => setSelected(answer)}
+              className={`rounded-lg border p-3 text-left text-sm transition-colors ${
+                isSelected
+                  ? isCorrect
+                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                    : "border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                  : "border-border bg-background hover:border-accent/60"
+              }`}
+            >
+              {answer}
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <p className={`text-sm font-medium ${selected === correctAnswer ? "text-emerald-600" : "text-rose-600"}`}>
+          {selected === correctAnswer ? "Correct — keep going!" : "Not quite. Review ‘What it does’ and try again."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default function DocPage({
+  content,
+  previous,
+  next,
+  relatedEntries = [],
+  quizOptions = [],
+  onNavigate,
+  onNavigateHome,
+  onNavigateLanguage,
+  onNavigateCategory,
+}: DocPageProps) {
   const language = prismLanguage(content.lang);
 
   // Retrieve smart custom dynamic guides, placements, and constraints
@@ -306,6 +369,16 @@ export default function DocPage({ content }: DocPageProps) {
   return (
     <article key={content.shortcut} className="flex gap-8">
       <div className="min-w-0 flex-1 space-y-8">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+          <button onClick={onNavigateHome} className="hover:text-foreground">Home</button>
+          <ChevronRight size={14} />
+          <button onClick={onNavigateLanguage} className="uppercase hover:text-foreground">{content.lang}</button>
+          <ChevronRight size={14} />
+          <button onClick={onNavigateCategory} className="hover:text-foreground">{content.cat}</button>
+          <ChevronRight size={14} />
+          <span className="font-medium text-foreground">{content.shortcut}</span>
+        </nav>
+
         {/* Header */}
         <Section>
           <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -401,6 +474,17 @@ export default function DocPage({ content }: DocPageProps) {
           </p>
         </Section>
 
+        {content.useCase && (
+          <Section delay={100}>
+            <h2 id="real-world-use-case" className="text-2xl sm:text-3xl font-bold text-foreground">
+              Real-World Use Case
+            </h2>
+            <div className="rounded-xl border border-accent/20 bg-accent/5 p-5 text-base leading-relaxed text-foreground/80">
+              {content.useCase}
+            </div>
+          </Section>
+        )}
+
         {/* Syntax / Usage */}
         <Section delay={140}>
           <h2 id="syntax-usage" className="text-2xl sm:text-3xl font-bold text-foreground">
@@ -470,37 +554,25 @@ export default function DocPage({ content }: DocPageProps) {
         ) : null}
 
         {/* Related Entries */}
-        {content.relatedIds && content.relatedIds.length > 0 && (
+        {relatedEntries.length > 0 && (
           <Section delay={205}>
             <h2 id="related-entries" className="text-2xl sm:text-3xl font-bold text-foreground">
-              Related Entries
+              Related Topics
             </h2>
-            <div className="flex flex-wrap gap-2">
-              {content.relatedIds.map(id => (
-                <a key={id} href={`/?q=${id}`} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-full text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors border border-border">
-                  {id}
-                </a>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {relatedEntries.map((entry) => (
+                <button
+                  key={`${entry.lang}-${entry.cat}-${entry.shortcut}`}
+                  onClick={() => onNavigate?.(entry)}
+                  className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 px-4 py-3 text-left text-sm font-medium transition-colors hover:border-accent/50 hover:bg-secondary"
+                >
+                  <span>{entry.shortcut}</span>
+                  <ChevronRight size={16} className="text-muted-foreground" />
+                </button>
               ))}
             </div>
           </Section>
         )}
-
-        {/* Links Demo */}
-        <Section delay={210}>
-          <h2 id="link-behavior-demo" className="text-2xl sm:text-3xl font-bold text-foreground">
-            Link Behavior Demo
-          </h2>
-          <div className="flex gap-4">
-            <a href="#header" className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors">
-              <Link2 size={16} />
-              Internal Anchor Jump
-            </a>
-            <a href="https://developer.mozilla.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors">
-              <Link2 size={16} />
-              External New Tab
-            </a>
-          </div>
-        </Section>
 
         {/* Step-by-step Guide */}
         <Section delay={220}>
@@ -593,7 +665,20 @@ export default function DocPage({ content }: DocPageProps) {
 
         <div className="divider-line" />
 
-        
+        {quizOptions.length > 0 && (
+          <Section delay={290}>
+            <h2 id="quick-quiz" className="text-2xl sm:text-3xl font-bold text-foreground">
+              Test Yourself
+            </h2>
+            <QuickQuiz
+              key={content.id || content.shortcut}
+              shortcut={content.shortcut}
+              correctAnswer={content.desc}
+              options={quizOptions}
+            />
+          </Section>
+        )}
+
         {/* Try It Yourself Section */}
         <Section delay={300}>
           <h2 id="practice" className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
@@ -628,6 +713,33 @@ export default function DocPage({ content }: DocPageProps) {
             <p className="text-lg uppercase text-foreground">{content.lang}</p>
           </div>
         </div>
+
+        <nav aria-label="Lesson navigation" className="grid gap-3 border-t border-border pt-6 sm:grid-cols-2">
+          {previous ? (
+            <button
+              onClick={() => onNavigate?.(previous)}
+              className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-all hover:border-accent/50 hover:-translate-y-0.5"
+            >
+              <ChevronLeft size={20} className="text-muted-foreground group-hover:text-accent" />
+              <span className="min-w-0">
+                <span className="block text-xs uppercase tracking-wide text-muted-foreground">Previous lesson</span>
+                <span className="block truncate font-semibold">{previous.shortcut}</span>
+              </span>
+            </button>
+          ) : <span />}
+          {next && (
+            <button
+              onClick={() => onNavigate?.(next)}
+              className="group flex items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent/5 p-4 text-left transition-all hover:border-accent hover:-translate-y-0.5"
+            >
+              <span className="min-w-0">
+                <span className="block text-xs uppercase tracking-wide text-muted-foreground">Next lesson</span>
+                <span className="block truncate font-semibold">{next.shortcut}</span>
+              </span>
+              <ChevronRight size={20} className="text-accent" />
+            </button>
+          )}
+        </nav>
       </div>
 
       <OnThisPageNav />
