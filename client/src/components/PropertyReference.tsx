@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from "react";
-import { Braces, Box, SlidersHorizontal, Tag } from "lucide-react";
+import { Braces, Box, SlidersHorizontal, Tag, MousePointerClick } from "lucide-react";
 
 type PropertyReferenceProps = {
   lang: string;
@@ -186,69 +186,179 @@ function CssPropertyReference({ shortcut, desc, syntax, example }: PropertyRefer
   const isBoxModel = /^(margin|padding|border)(-|$)/.test(property);
   const values = VALUE_GUIDES[property] || ["keyword values", "length or percentage where supported", "inherit", "initial", "unset"];
   const appliesTo = property.startsWith("font") || property.startsWith("text") ? "Text and text-containing elements" : property.includes("grid") ? "Grid containers or items" : property.includes("flex") ? "Flex containers or items" : "All elements (effect depends on layout context)";
+  const facts = [
+    ["Initial", INITIAL_VALUES[property] || "Property-specific"],
+    ["Inherited", INHERITED.has(property) ? "Yes" : "No"],
+    ["Animatable", NON_ANIMATABLE.has(property) ? "No" : "By value type"],
+    ["Applies to", appliesTo],
+  ];
 
   return (
-    <section className="space-y-5">
-      <div className="flex items-center gap-2">
-        <Braces size={22} className="text-accent" />
-        <h2 id="property-reference" className="text-2xl font-bold sm:text-3xl">Property Reference</h2>
-      </div>
-      <p className="leading-relaxed text-foreground/80"><code className="rounded bg-secondary px-1.5 py-0.5">{property}</code> {desc.charAt(0).toLowerCase() + desc.slice(1)} This property participates in the CSS cascade, so specificity, source order, and inheritance can affect the final computed value.</p>
-      <div className="grid overflow-hidden rounded-xl border border-border sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          ["Initial value", INITIAL_VALUES[property] || "Depends on the property"],
-          ["Inherited", INHERITED.has(property) ? "Yes" : "No"],
-          ["Animatable", NON_ANIMATABLE.has(property) ? "No" : "Usually / by value type"],
-          ["Applies to", appliesTo],
-        ].map(([label, detail]) => (
-          <div key={label} className="border-b border-border p-4 last:border-b-0 sm:border-r sm:[&:nth-child(2)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2)]:border-r">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{detail}</p>
-          </div>
-        ))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="mb-3 flex items-center gap-2 font-semibold"><SlidersHorizontal size={17} className="text-accent" /> Accepted value types</h3>
-          <ul className="space-y-2 text-sm text-foreground/80">
-            {values.map((item) => <li key={item} className="flex gap-2"><span className="text-accent">•</span>{item}</li>)}
-          </ul>
+    <section className="space-y-4">
+      <div>
+        <div className="flex items-center gap-2">
+          <Braces size={21} className="text-accent" />
+          <h2 id="property-reference" className="text-2xl font-bold sm:text-3xl">Property Reference</h2>
         </div>
-        {isBoxModel ? <BoxModelShowcase property={property} /> : <GenericCssShowcase property={property} value={value} />}
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/75"><code className="rounded bg-secondary px-1.5 py-0.5">{property}</code> {desc.charAt(0).toLowerCase() + desc.slice(1)} Its final value can be affected by the cascade, specificity, and source order.</p>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="grid border-b border-border sm:grid-cols-2 lg:grid-cols-4">
+          {facts.map(([label, detail]) => (
+            <div key={label} className="border-b border-border p-3.5 last:border-b-0 sm:border-r sm:[&:nth-child(2)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2)]:border-r">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{detail}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-b border-border p-4">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={16} className="text-accent" /> Accepted values</h3>
+          <div className="flex flex-wrap gap-2">
+            {values.map((item) => <span key={item} className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs text-foreground/80">{item}</span>)}
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5">
+          {isBoxModel ? <BoxModelShowcase property={property} /> : <GenericCssShowcase property={property} value={value} />}
+        </div>
       </div>
     </section>
+  );
+}
+
+function domPropertyName(attribute: string) {
+  const name = attribute.split(/\s|\//)[0].replace("-*", "");
+  const aliases: Record<string, string> = {
+    class: "className",
+    tabindex: "tabIndex",
+    readonly: "readOnly",
+    maxlength: "maxLength",
+    colspan: "colSpan",
+    rowspan: "rowSpan",
+    for: "htmlFor",
+  };
+  if (attribute === "data-*") return "dataset";
+  if (attribute === "aria-*") return "getAttribute('aria-label')";
+  return aliases[name] || name;
+}
+
+function usageMarkup(tag: string, attribute: AttributeInfo) {
+  const voidTags = new Set(["img", "input", "br", "hr", "meta", "link", "source", "track", "area", "base", "embed", "wbr"]);
+  const actualTag = tag === "element" ? "div" : tag;
+  return voidTags.has(actualTag)
+    ? `<${actualTag} ${attribute.example}>`
+    : `<${actualTag} ${attribute.example}>Example content</${actualTag}>`;
+}
+
+function AttributeUsagePreview({ tag, attribute }: { tag: string; attribute: AttributeInfo }) {
+  const name = attribute.name;
+  let preview = <div className="rounded-lg border border-border bg-secondary/40 px-5 py-6 text-center text-sm font-semibold">&lt;{tag}&gt; using <span className="text-accent">{name}</span></div>;
+
+  if (["href", "target", "rel", "download"].includes(name)) {
+    preview = <a href="#attribute-preview" onClick={(event) => event.preventDefault()} className="inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground underline-offset-4 hover:underline">Open the example link</a>;
+  } else if (["placeholder", "required", "value", "type", "name", "autocomplete"].includes(name)) {
+    preview = <input placeholder={name === "placeholder" ? "you@example.com" : `Input using ${name}`} required={name === "required"} defaultValue={name === "value" ? "Example value" : undefined} className="w-full max-w-sm rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent" />;
+  } else if (name === "disabled") {
+    preview = <button disabled className="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-muted-foreground opacity-60">Disabled control</button>;
+  } else if (["src", "alt", "width / height", "loading", "srcset / sizes", "poster"].includes(name)) {
+    preview = <div className="mx-auto grid aspect-video max-w-xs place-items-center rounded-lg border border-dashed border-accent/50 bg-accent/5 text-center text-xs text-muted-foreground"><span><strong className="block text-foreground">Media preview</strong>{name} controls this resource</span></div>;
+  } else if (name === "hidden") {
+    preview = <div className="rounded-lg border border-dashed border-border p-5 text-center text-xs text-muted-foreground">The target element is hidden, so it occupies no rendered space.</div>;
+  } else if (name === "style") {
+    preview = <div style={{ color: "white", background: "linear-gradient(135deg,#7c3aed,#2563eb)" }} className="rounded-lg px-5 py-6 text-center text-sm font-semibold shadow-lg">Inline style applied</div>;
+  } else if (name === "title") {
+    preview = <div title="More information" className="rounded-lg border border-border bg-secondary/40 px-5 py-6 text-center text-sm">Hover me to see the title tooltip</div>;
+  } else if (name === "tabindex") {
+    preview = <button className="rounded-lg border border-accent/50 px-4 py-2 text-sm focus:ring-2 focus:ring-accent">Press Tab to focus me</button>;
+  } else if (name === "aria-*") {
+    preview = <button aria-label="Close preview" className="rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background">Accessible button</button>;
+  } else if (name === "data-*") {
+    preview = <div data-user-id="42" className="rounded-lg border border-border bg-secondary/40 px-5 py-6 text-center text-sm">dataset.userId = <strong>42</strong></div>;
+  } else if (["controls", "autoplay / muted"].includes(name)) {
+    preview = <div className="mx-auto max-w-xs overflow-hidden rounded-lg bg-black text-white"><div className="grid aspect-video place-items-center text-2xl">▶</div><div className="flex items-center gap-2 bg-zinc-900 px-3 py-2 text-xs"><span>▶</span><div className="h-1 flex-1 rounded bg-zinc-600" /><span>0:00</span></div></div>;
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-secondary/15 p-4">
+      <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Rendered usage</p>
+      <div className="grid min-h-32 place-items-center rounded-lg bg-background p-4">{preview}</div>
+    </div>
   );
 }
 
 function HtmlElementReference({ shortcut }: PropertyReferenceProps) {
   const tag = extractTag(shortcut);
   const attributes = [...(ELEMENT_ATTRIBUTES[tag] || []), ...GLOBAL_ATTRIBUTES];
+  const [selectedName, setSelectedName] = useState(attributes[0]?.name || "id");
+  const selected = attributes.find((attribute) => attribute.name === selectedName) || attributes[0];
+  const markup = usageMarkup(tag, selected);
+  const domProperty = domPropertyName(selected.name);
+
   return (
-    <section className="space-y-5">
-      <div className="flex items-center gap-2">
-        <Tag size={22} className="text-accent" />
-        <h2 id="element-properties" className="text-2xl font-bold sm:text-3xl">Element Properties &amp; Attributes</h2>
+    <section className="space-y-4">
+      <div>
+        <div className="flex items-center gap-2">
+          <Tag size={21} className="text-accent" />
+          <h2 id="element-properties" className="text-2xl font-bold sm:text-3xl">Properties &amp; Attributes</h2>
+        </div>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/75">Select an attribute to see exactly what it controls, how it is written, its JavaScript property, and a rendered example.</p>
       </div>
-      <p className="leading-relaxed text-foreground/80">The <code className="rounded bg-secondary px-1.5 py-0.5">&lt;{tag}&gt;</code> element supports global HTML attributes plus element-specific attributes. In JavaScript, many of these are exposed as DOM properties—for example, <code className="rounded bg-secondary px-1.5 py-0.5">element.id</code>, <code className="rounded bg-secondary px-1.5 py-0.5">element.className</code>, and <code className="rounded bg-secondary px-1.5 py-0.5">element.hidden</code>.</p>
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="bg-secondary/60 text-xs uppercase tracking-wide text-muted-foreground">
-            <tr><th className="px-4 py-3">Property / attribute</th><th className="px-4 py-3">What it controls</th><th className="px-4 py-3">Example</th></tr>
-          </thead>
-          <tbody>
-            {attributes.map((attribute) => (
-              <tr key={`${tag}-${attribute.name}`} className="border-t border-border align-top">
-                <td className="px-4 py-3 font-mono font-semibold text-accent">{attribute.name}</td>
-                <td className="px-4 py-3 text-foreground/80">{attribute.description}</td>
-                <td className="px-4 py-3"><code className="rounded bg-secondary px-2 py-1 text-xs">{attribute.example}</code></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="overflow-hidden rounded-2xl border border-border bg-card lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside className="border-b border-border bg-secondary/25 lg:border-b-0 lg:border-r">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-xs font-semibold text-muted-foreground">
+            <MousePointerClick size={15} /> Click an attribute
+          </div>
+          <div className="grid max-h-[30rem] grid-cols-2 gap-1 overflow-y-auto p-2 lg:grid-cols-1">
+            {attributes.map((attribute) => {
+              const active = attribute.name === selected.name;
+              return (
+                <button
+                  key={`${tag}-${attribute.name}`}
+                  type="button"
+                  onClick={() => setSelectedName(attribute.name)}
+                  aria-pressed={active}
+                  className={`rounded-lg px-3 py-2 text-left font-mono text-xs font-semibold transition-colors ${active ? "bg-accent text-accent-foreground shadow-sm" : "text-foreground/75 hover:bg-secondary hover:text-foreground"}`}
+                >
+                  {attribute.name}
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        <div className="min-w-0 p-4 sm:p-6">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">Selected attribute</p>
+              <h3 className="mt-1 font-mono text-xl font-bold text-foreground">{selected.name}</h3>
+            </div>
+            <span className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs text-muted-foreground">&lt;{tag}&gt;</span>
+          </div>
+
+          <p className="mb-5 text-sm leading-relaxed text-foreground/80">{selected.description}</p>
+
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-border bg-[#1e1e1e] p-4 text-white">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">HTML usage</p>
+              <code className="block overflow-x-auto whitespace-pre-wrap break-words text-xs text-emerald-300">{markup}</code>
+            </div>
+            <div className="rounded-xl border border-border bg-secondary/20 p-4">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">DOM property</p>
+              <code className="block break-words text-xs text-accent">element.{domProperty}</code>
+              <p className="mt-2 text-xs text-muted-foreground">JavaScript can read or update the corresponding state through this DOM API.</p>
+            </div>
+          </div>
+
+          <AttributeUsagePreview tag={tag} attribute={selected} />
+        </div>
       </div>
-      <div className="rounded-xl border border-border bg-secondary/20 p-5">
-        <h3 className="mb-3 flex items-center gap-2 font-semibold"><Box size={17} className="text-accent" /> CSS showcase connection</h3>
-        <p className="text-sm leading-relaxed text-foreground/80">Every visible HTML element generates one or more boxes that CSS can style. Common starting properties include <code>display</code>, <code>margin</code>, <code>padding</code>, <code>border</code>, <code>width</code>, <code>color</code>, and <code>background</code>. Use the live preview below to apply those properties to this element.</p>
+
+      <div className="flex gap-3 rounded-xl border border-border bg-secondary/20 p-4">
+        <Box size={17} className="mt-0.5 flex-none text-accent" />
+        <p className="text-sm leading-relaxed text-foreground/75">CSS controls the element's visual box. Start with <code>display</code>, <code>margin</code>, <code>padding</code>, <code>border</code>, <code>width</code>, <code>color</code>, and <code>background</code>, then experiment in the live preview.</p>
       </div>
     </section>
   );
