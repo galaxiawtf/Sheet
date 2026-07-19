@@ -8,6 +8,7 @@ import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import OnThisPageNav from "@/components/OnThisPageNav";
 import { getDifficultyRating } from "@/utils/difficulty";
 import LivePreview from "@/components/LivePreview";
+import PropertyReference from "@/components/PropertyReference";
 import CodeMirror from "@uiw/react-codemirror";
 import { html } from "@codemirror/lang-html";
 import { css } from "@codemirror/lang-css";
@@ -482,6 +483,19 @@ export default function DocPage({
             <div className="rounded-xl border border-accent/20 bg-accent/5 p-5 text-base leading-relaxed text-foreground/80">
               {content.useCase}
             </div>
+          </Section>
+        )}
+
+        {(content.lang === "css" || (content.lang === "html" && content.cat.startsWith("Elements"))) && (
+          <Section delay={120}>
+            <PropertyReference
+              lang={content.lang}
+              category={content.cat}
+              shortcut={content.shortcut}
+              desc={content.desc}
+              syntax={content.syntax}
+              example={content.example}
+            />
           </Section>
         )}
 
