@@ -219,25 +219,9 @@
     box-shadow: 0 14px 34px -16px rgba(0, 0, 0, 0.35);
   }
 
-  /* Animated brand gradient text (used on doc titles / headings). */
+  /* Plain brand accent color for headings (replaces old gradient). */
   .gradient-text {
-    background-image: linear-gradient(
-      100deg,
-      #5b6ef5 0%,
-      #8a3fd0 40%,
-      #c13584 70%,
-      #5b6ef5 100%
-    );
-    background-size: 220% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: gradient-pan 6s linear infinite;
-  }
-  @keyframes gradient-pan {
-    to {
-      background-position: 220% center;
-    }
+    color: var(--primary);
   }
 
   /* Slim, themed scrollbar for scroll containers. */
@@ -259,9 +243,6 @@
 
   /* Respect users who prefer reduced motion. */
   @media (prefers-reduced-motion: reduce) {
-    .gradient-text {
-      animation: none;
-    }
     .hover-lift {
       transition: none;
     }

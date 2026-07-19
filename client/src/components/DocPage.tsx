@@ -300,6 +300,64 @@ function getDynamicDetails(lang: string, cat: string, shortcut: string, desc: st
   return { whereToPut: { fileType, location, detail }, guide, limitations };
 }
 
+function getThingsToKnow(lang: string, cat: string, shortcut: string): string[] {
+  const clean = shortcut.replace(/[<>`]/g, "").trim().toLowerCase();
+  const isEmmet = cat.toLowerCase().includes("emmet");
+
+  const universal = [
+    "Always test your code in multiple browsers (Chrome, Firefox, Safari) to ensure consistent behavior.",
+    "Use your browser's Developer Tools (F12) to inspect, debug, and experiment with changes in real time.",
+    "Keep your code well-commented — future you (or your teammates) will thank you.",
+  ];
+
+  if (isEmmet) {
+    return [
+      "Emmet works in most modern editors out of the box — VS Code has it built-in, Notepad++ needs the plugin installed separately.",
+      "You can chain Emmet abbreviations with `>` (child), `+` (sibling), and `*` (multiply) for complex structures in one keystroke.",
+      "If Tab doesn't expand your abbreviation, try pressing Ctrl+Space first to trigger the suggestion popup.",
+      "Emmet also works inside JSX/TSX files in VS Code — just make sure your file is recognized as a JavaScript React or TypeScript React file.",
+      "You can customize Emmet snippets in VS Code by editing your `settings.json` under `emmet.extensionsPath`.",
+    ];
+  }
+
+  if (lang === "html") {
+    return [
+      ...universal,
+      "HTML is not case-sensitive, but lowercase tags are the standard convention and improve readability.",
+      "Every opening tag should have a matching closing tag (except void/self-closing elements like `<img>`, `<br>`, `<input>`).",
+      "Use semantic HTML elements (`<nav>`, `<main>`, `<article>`, `<section>`) instead of generic `<div>` wrappers — it improves SEO and accessibility.",
+      "The `alt` attribute on images isn't optional — screen readers depend on it, and it's required for WCAG compliance.",
+      "Validate your HTML at https://validator.w3.org/ to catch nesting errors and deprecated tags early.",
+      "The order of elements in `<head>` matters: charset meta should come first, then viewport, then title, then stylesheets.",
+    ];
+  }
+
+  if (lang === "css") {
+    return [
+      ...universal,
+      "CSS specificity determines which rules win: inline styles > IDs > classes/attributes > elements. Use `!important` only as a last resort.",
+      "Use CSS custom properties (`--my-color: #333`) for consistent theming — they cascade and can be overridden per-component.",
+      "Prefer `rem` units over `px` for font sizes and spacing — they respect the user's browser font-size preference.",
+      "The `box-sizing: border-box` rule should be set globally (`*, *::before, *::after { box-sizing: border-box; }`) to make layout math predictable.",
+      "Flexbox is for one-dimensional layouts (row OR column); CSS Grid is for two-dimensional layouts (rows AND columns). Use both together.",
+      "Use the `clamp()` function (e.g. `font-size: clamp(1rem, 2.5vw, 2rem)`) for fluid typography that scales smoothly across screen sizes.",
+      "CSS transitions animate between two states; CSS animations (`@keyframes`) can handle multi-step sequences and loops.",
+    ];
+  }
+
+  // JS
+  return [
+    ...universal,
+    "Use `const` by default, `let` when you need reassignment, and avoid `var` entirely — it has confusing hoisting and scoping behavior.",
+    "`===` (strict equality) should always be preferred over `==` (loose equality) to avoid unexpected type coercion.",
+    "Arrow functions (`=>`) don't have their own `this` — they inherit it from the surrounding scope. Use regular functions when you need dynamic `this`.",
+    "Always handle errors in async code: use `try/catch` with `async/await`, or `.catch()` with Promises.",
+    "Use `Array.map()`, `.filter()`, and `.reduce()` instead of manual `for` loops for cleaner, more readable data transformations.",
+    "The `?.` optional chaining operator and `??` nullish coalescing operator prevent crashes from `null`/`undefined` without verbose if-checks.",
+    "DOM manipulation is expensive — batch your reads and writes, and prefer `textContent` over `innerHTML` when you don't need HTML parsing (it's faster and safer against XSS).",
+  ];
+}
+
 function QuickQuiz({ shortcut, correctAnswer, options }: { shortcut: string; correctAnswer: string; options: string[] }) {
   const [selected, setSelected] = useState<string | null>(null);
   const uniqueAnswers = Array.from(new Set([correctAnswer, ...options])).slice(0, 4);
@@ -409,7 +467,7 @@ export default function DocPage({
             )}
           </div>
           <div className="flex items-end justify-between">
-            <h1 className="gradient-text text-3xl sm:text-4xl font-bold tracking-tight break-words">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight break-words text-primary">
               {content.shortcut}
             </h1>
             <button 
@@ -473,6 +531,26 @@ export default function DocPage({
             {content.whatItDoes ||
               `The ${content.shortcut} is used to ${content.desc.toLowerCase()}`}
           </p>
+        </Section>
+
+        {/* Things to Know */}
+        <Section delay={80}>
+          <h2 id="things-to-know" className="text-2xl sm:text-3xl font-bold text-foreground">
+            Things to Know
+          </h2>
+          <div className="space-y-2.5">
+            {getThingsToKnow(content.lang, content.cat, content.shortcut).map((tip, idx) => (
+              <div
+                key={idx}
+                className="flex gap-3 rounded-xl border border-border bg-secondary/20 p-3.5 transition-colors hover:bg-secondary/40"
+              >
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                  {idx + 1}
+                </span>
+                <p className="text-sm leading-relaxed text-foreground/80">{tip}</p>
+              </div>
+            ))}
+          </div>
         </Section>
 
         {content.useCase && (
